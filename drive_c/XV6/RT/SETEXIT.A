@@ -1,0 +1,30 @@
+; SETEXIT.A -- V6-style non-local goto for DeSmet C 3.03 (ASM88 port of
+; RealXV6 usr/setexit.asm).  setexit() records the current call frame
+; and returns normally; a later reset() unwinds the stack back to that
+; point, as if setexit() had returned a second time (used by ed).
+; Position independent: near jmps, DS-relative data.
+
+        DSEG
+SAVIP:  DW      0
+SAVSP:  DW      0
+SAVBP:  DW      0
+
+        CSEG
+        PUBLIC  SETEXIT_
+        PUBLIC  RESET_
+
+; setexit()
+SETEXIT_:
+        POP     AX              ; ax = near return address
+        MOV     SAVIP,AX
+        MOV     SAVSP,SP        ; SP as it is after the return addr is popped
+        MOV     SAVBP,BP
+        JMP     AX              ; normal return (first time through)
+
+; reset()
+RESET_:
+        MOV     SP,SAVSP
+        MOV     BP,SAVBP
+        MOV     AX,SAVIP
+        JMP     AX              ; resume right after the setexit() call
+        END
