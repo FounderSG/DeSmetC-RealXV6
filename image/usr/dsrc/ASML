@@ -1,0 +1,1 @@
+../rt/DCRT0.O ASM88 ASM2 ASM3 ASM4 ASM5 ../rt/V6CHAIN.O ../rt/SYSCALL.O ../rt/USTR.O ../rt/DCOMPAT.O ../rt/V6DOS.O ../rt/V6MISC.O -A -L../rt/ -OASM88V6

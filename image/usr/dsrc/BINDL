@@ -1,0 +1,1 @@
+../rt/DCRT0.O BIND ../rt/V6CHAIN.O ../rt/SYSCALL.O ../rt/USTR.O ../rt/DCOMPAT.O ../rt/V6DOS.O ../rt/V6MISC.O -A -L../rt/ -OBINDV6

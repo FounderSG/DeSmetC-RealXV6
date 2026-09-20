@@ -1,0 +1,117 @@
+; DCRT0.A -- CRT0 for the DOS TOOL PORTS.  Byte-for-byte CRT0.A except that
+; SYSCALL_ returns -1 to C on error instead of the kernel's -errno.
+;
+; The two worlds disagree, the same way UCOMPAT.C and DCOMPAT.C do, and for
+; the same reason -- so each link picks one, and neither is "wrong":
+;
+;   CRT0.A  (V6)   returns -errno.  RealXV6's own userland reads the code
+;                  straight off the return value: usr/unix.h defines EAGAIN
+;                  as -11 and usr/forktest.c does `if (pid == EAGAIN)`.
+;                  Clamping would break that, so user programs link CRT0.
+;   DCRT0.A (DOS)  returns -1, code in ERRNO_ -- the Unix libc `cerror`
+;                  convention that DOS C libraries copied.  The vintage
+;                  DeSmet tools test `== -1` in 126 places (27 in BIND.C
+;                  alone) and cannot be rewritten, so tools link DCRT0.
+;
+; Without this, a missing file was silent: open() handed BIND a -2, its
+; `== -1` test took that for a file descriptor, and it read on with the
+; PREVIOUS file's buffer -- reporting that file's symbols again as "multiply
+; defined" and dying in close(-2), instead of naming what it could not open.
+; A link against a missing object now fails by name.
+;
+; Kept as a full copy rather than an ASM88 INCLUDE of CRT0.A: the one
+; differing instruction sits INSIDE SYSCALL_, and INCLUDE can only splice
+; whole files (ASM88.C:864; :862 rejects nesting), so sharing would mean
+; cutting CRT0.A into head/tail fragments for the sake of one MOV.  EDIT ONE,
+; EDIT THE OTHER -- the data layout especially: d2a patches ENDBRK_ at DSEG
+; offset 0x0A and expects code offset 0 to be the trampoline JMP.
+; Port of RealXV6 usr/startup.asm (Watcom wasm) to DeSmet naming:
+; C88 appends a trailing underscore to C identifiers (main -> MAIN_).
+;
+; Link with BIND -A and list CRT0.O FIRST: -A suppresses the DOS _csetup
+; and makes execution start at the first instruction of the first object,
+; so this module's code begins at CS:0.
+;
+; Layout contract with d2a and the RealXV6 kernel:
+;   code offset 0: 2-byte short JMP to CALLSIG -- psig() vectors caught
+;                  signals to code offset SIGTRAMP_EXE (= 0)
+;   code offset 2: STARTX, the program entry (a_entry in the a.out header)
+; The kernel zeroes data+bss+stack before loading (ken/sys1.c clearseg),
+; sets DS=ES=SS to the data window, pushes argc/argv, and irets to entry,
+; so unlike the DOS startup there is nothing to initialize here.
+
+        DSEG
+        PUBLIC  ERRNO_
+        PUBLIC  R0_
+        PUBLIC  R1_
+        PUBLIC  R3_
+        PUBLIC  ENDBRK_
+NULLGD: DW      0               ; guard word so no C global sits at DS:0
+ERRNO_: DW      0
+R0_:    DW      0
+R1_:    DW      0
+R3_:    DW      0
+; End of BSS = initial program break, PATCHED by d2a with the total
+; static data size (BIND has no "end" symbol and its BSS ordering is
+; opaque, so the converter injects the value).
+; sbrk() reads it as: extern unsigned endbrk;
+ENDBRK_:DW      0
+
+        CSEG
+        PUBLIC  MAIN_           ; defined by the C program (external here)
+        PUBLIC  SYSCALL_
+
+; code offset 0: signal trampoline (must assemble as a 2-byte short jmp;
+; d2a verifies the EB opcode and derives a_entry from it).
+SIGTRMP:JMP     CALLSIG
+
+; code offset 2: program entry.  The kernel already placed argc/argv on
+; the stack exactly as a cdecl caller would, so after CALL pushes the
+; return address, MAIN_ sees argc at BP+4 and argv at BP+6.  MAIN_'s
+; return value lands in AX = syscall r0 = the exit status.
+STARTX: CALL    MAIN_
+        MOV     DX,1            ; SYS_exit
+        INT     81H
+
+; syscall(fn, r0, ...) -- cdecl, caller cleans.  fn -> DX, r0 -> AX; any
+; further C arguments stay on the user stack where the kernel reads them
+; positionally (trap0 arg0..arg2).  Returns AX; error code arrives in DX
+; (0 = success), r1 in BX.  CRT0.A mirrors _syscall in
+; usr/startup.asm; this one deliberately does not -- see the header.
+SYSCALL_:
+        POP     CX              ; return address
+        POP     DX              ; syscall number
+        POP     AX              ; r0
+        INT     81H
+        OR      DX,DX
+        JZ      SYSOK           ; DX == 0 -> no error
+        MOV     ERRNO_,DX
+        MOV     AX,0FFFFH       ; C return value: -1 (code stays in ERRNO_)
+        MOV     DX,0FFFFH       ; -1
+SYSOK:  MOV     R0_,AX
+        MOV     R1_,BX
+        MOV     R3_,DX
+        SUB     SP,4            ; re-cover the two words we popped
+        PUSH    CX              ; put the return address back
+        RET
+
+; Signal trampoline body: the kernel enters code offset 0 with the handler
+; offset in SI and an interrupt-style frame (h/reg.h struct ctx) on the
+; user stack; call the handler, restore registers, and resume.  The last
+; three ctx slots are repurposed by psig(): ip slot = saved AX, cs slot =
+; saved FLAGS, flag slot = resume address (near RET target).  Mirrors
+; _callsig in usr/startup.asm pop for pop.
+CALLSIG:CALL    SI
+        POP     AX              ; discard ds slot (ds unchanged)
+        POP     AX              ; discard es slot (es unchanged)
+        POP     DX
+        POP     CX
+        POP     BX
+        POP     AX
+        POP     DI
+        POP     SI
+        POP     BP
+        POP     AX              ; real AX (from the ip slot)
+        POPF                    ; real FLAGS (from the cs slot)
+        RET                     ; resume address (from the flag slot)
+        END

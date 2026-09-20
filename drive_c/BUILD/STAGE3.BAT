@@ -19,13 +19,15 @@ rem is already in the tree and no host tool is needed for it: FCMP, which CROSS
 rem builds in C:\BUILD, takes the two files and a file to record differences in:
 rem     FCMP C88\MY_C88.EXE STAGE2\C88.EXE S3.DIF
 rem Note that the session's PATH keeps C:\BUILD\STAGE2 in front afterwards.
-path C:\BUILD\STAGE2;C:\DESMET\BIN;C:\DESMET\LIB;Z:\
+rem C:\DESMET\BIN is NOT on this PATH, for the reason STAGE2.BAT gives -- here
+rem it would turn the fixpoint check into stage 2 compared against itself.
+path C:\BUILD\STAGE2;C:\DESMET\LIB;Z:\
 set DSINC=C:\DESMET\INCLUDE\
 c:
 cd \BUILD
 rem Refuse to run on an empty STAGE2.  A missing dir on the PATH is not an
-rem error in DOS -- the search just falls through to C:\DESMET\BIN and the
-rem build silently becomes a stage-1 one that LOOKS like it succeeded.
+rem error in DOS, so without this every c88 would be "Bad command or file
+rem name" and MKALL would carry on to the next component regardless.
 if not exist STAGE2\C88.EXE goto empty
 if not exist STAGE2\GEN.EXE goto empty
 if not exist STAGE2\ASM88.EXE goto empty

@@ -1,0 +1,1 @@
+../rt/DCRT0.O C88 C2 C3 C4 C5 C6 C7 ../rt/V6CHAIN.O ../rt/SYSCALL.O ../rt/USTR.O ../rt/DCOMPAT.O ../rt/V6DOS.O ../rt/V6MISC.O -A -L../rt/ -OC88V6

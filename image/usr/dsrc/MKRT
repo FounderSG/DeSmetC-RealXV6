@@ -1,0 +1,40 @@
+# MKRT -- build the shared V6 runtime, ON RealXV6, into /src/rt.
+#
+#     cd /src/rt ; drun mkrt
+#
+# /src/rt is the one copy of the runtime every other build links against --
+# /src/desmet (the toolchain) and /src/usr (the user programs).  They reach
+# it as ../rt/NAME in their BIND lists, and -L../rt/ for the library, so
+# nothing is duplicated into the image.
+#
+# Why this works despite C88 having no usable include search here: the
+# runtime is compiled IN this directory, so its `#include "UNIX.H"` resolves
+# in the cwd with no -i at all.  Only /src/usr and the two converters in
+# /src/desmet need -i../rt/, and because every source in the tree spells it
+# "UNIX.H" in UPPER case while this directory is lower-case `rt`, the
+# prefixed name ../rt/UNIX.H matches VERBATIM -- DCOMPAT's case fold never
+# has to run, and it could not help if it did: foldcase() rewrites the whole
+# path, so ../rt/unix.h would fold to ../RT/UNIX.H and miss the directory.
+#
+# Two CRT0s, and each link picks one -- the same split UCOMPAT.C/DCOMPAT.C
+# make, for the same reason.  CRT0 returns the kernel's -errno, which is what
+# V6 userland reads (usr/unix.h has EAGAIN -11; forktest does `pid ==
+# EAGAIN`), so ../usr links it.  DCRT0 returns -1 with the code in ERRNO_,
+# which is what the vintage tools' 126 `== -1` tests need, so ../desmet links
+# it.  Either way it must be FIRST in the link: BIND -A starts at the first
+# instruction of the first object, and d2a patches ENDBRK_ at DS:000A.
+
+asm88 CRT0
+asm88 DCRT0
+asm88 V6MISC
+asm88 SETEXIT
+c88 SYSCALL
+c88 USTR
+c88 PRINTF
+c88 DCOMPAT
+c88 V6DOS
+c88 V6CHAIN
+c88 ULIB
+c88 UCOMPAT
+c88 CTIME
+echo === RT BUILT ===

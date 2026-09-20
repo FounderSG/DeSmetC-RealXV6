@@ -1,0 +1,128 @@
+RPGmonitor alive
+entering V86 unix
+Unix Ready.
+init: starting sh
+# cd /src/rt
+# drun mkrt
++ asm88 CRT0
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        0038 code   000C data   1% utilization+ asm88 DCRT0
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        003B code   000C data   1% utilization+ asm88 V6MISC
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        0006 code   0003 data   1% utilization+ asm88 SETEXIT
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        001B code   0006 data   1% utilization+ c88 SYSCALL
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0338H code   0002H data        10% Utilization    + c88 USTR
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00F8H code   0000H data        3% Utilization    + c88 PRINTF
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     044CH code   0031H data        8% Utilization    + c88 DCOMPAT
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0139H code   0000H data        4% Utilization    + c88 V6DOS
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0269H code   001BH data        8% Utilization    + c88 V6CHAIN
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0136H code   0017H data        6% Utilization    + c88 ULIB
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     06B0H code   42A5H data        16% Utilization    + c88 UCOMPAT
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00CFH code   0000H data        5% Utilization    + c88 CTIME
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0510H code   00B1H data        7% Utilization    + echo === RT BUILT ===
+=== RT BUILT ===
+=== DRUN DONE ===
+# cd /src/desmet
+# drun mkall
++ c88 GEN
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+end of C88        20DB code   6836 data   50% utilization+ c88 GEN2
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     1142H code   629CH data        39% Utilization    + c88 GEN3
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     154BH code   61E5H data        30% Utilization    + c88 GEN4
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0FFAH code   61CAH data        25% Utilization    + c88 GEN5
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     1FC0H code   6298H data        37% Utilization    + c88 GEN6
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     1E2EH code   7C14H data        58% Utilization    + dbind -fGENL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        16% utilization    + d2a GENV6.EXE gen.new 1000
+d2a: GENV6.EXE -> gen.new text=43520 data=3584 bss=30556 stack=4096 entry=2
++ dcmp gen.new /bin/gen
+IDENTICAL (47120 bytes)
++ rm GEN.O GEN2.O GEN3.O GEN4.O GEN5.O GEN6.O GENV6.EXE gen.new
++ c88 C88
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     16F3H code   1E92H data        36% Utilization    + c88 C2
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+end of C88        1332 code   1C92 data   35% utilization+ c88 C3
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0CEDH code   1BA9H data        31% Utilization    + c88 C4
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0EB0H code   1AF4H data        28% Utilization    + c88 C5
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     1241H code   1BB8H data        31% Utilization    + c88 C6
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0D0AH code   1B4AH data        25% Utilization    + c88 C7
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+end of C88        0DBA code   1BF6 data   34% utilization+ dbind -fC88L
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        14% utilization    + d2a C88V6.EXE c88.new 1000
+d2a: C88V6.EXE -> c88.new text=34816 data=3584 bss=6368 stack=4096 entry=2
++ dcmp c88.new /bin/c88
+IDENTICAL (38416 bytes)
++ rm C88.O C2.O C3.O C4.O C5.O C6.O C7.O C88V6.EXE c88.new
++ c88 ASM88
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     1EB1H code   2DBBH data        56% Utilization    + c88 ASM2
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     114EH code   1FDBH data        26% Utilization    + c88 ASM3
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+325     orm(&ftype-> $$ bytes[0],vtype);
+       warning:member not in structure
+ Number of Warnings = 1
+End of C88     0B33H code   20C5H data        30% Utilization    + c88 ASM4
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0AF6H code   1FAAH data        22% Utilization    + c88 ASM5
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     15EEH code   2074H data        30% Utilization    + dbind -fASML
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        14% utilization    + d2a ASM88V6.EXE asm88.new 1000
+d2a: ASM88V6.EXE -> asm88.new text=29184 data=5120 bss=7890 stack=4096 entry=2
++ dcmp asm88.new /bin/asm88
+IDENTICAL (34320 bytes)
++ rm ASM88.O ASM2.O ASM3.O ASM4.O ASM5.O ASM88V6.EXE asm88.new
++ c88 BIND
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+end of C88        2C93 code   5C8F data   51% utilization+ dbind -fBINDL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        11% utilization    + d2a BINDV6.EXE dbind.new 1000
+d2a: BINDV6.EXE -> dbind.new text=14336 data=2048 bss=21715 stack=4096 entry=2
++ dcmp dbind.new /bin/dbind
+IDENTICAL (16400 bytes)
++ rm BIND.O BINDV6.EXE dbind.new
++ c88 LIB88
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     1090H code   5AA1H data        24% Utilization    + dbind -fLIBL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        11% utilization    + d2a LIB88V6.EXE dlib88.new 1000
+d2a: LIB88V6.EXE -> dlib88.new text=7168 data=1024 bss=22245 stack=4096 entry=2
++ dcmp dlib88.new /bin/dlib88
+IDENTICAL (8208 bytes)
++ rm LIB88.O LIB88V6.EXE dlib88.new
++ c88 D2A -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0726H code   44FFH data        26% Utilization    + dbind -fD2AL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        11% utilization    + d2a D2AV6.EXE d2a.new 1000
+d2a: D2AV6.EXE -> d2a.new text=4608 data=1024 bss=16703 stack=4096 entry=2
++ dcmp d2a.new /bin/d2a
+IDENTICAL (5648 bytes)
++ rm D2A.O D2AV6.EXE d2a.new
++ echo === MKALL FIXPOINT OK ===
+=== MKALL FIXPOINT OK ===
+=== DRUN DONE ===
+# 

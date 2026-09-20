@@ -14,13 +14,18 @@ rem
 rem The PATH is set HERE and nowhere else, as in STAGE1.BAT / STAGE3.BAT.
 rem Nothing is published unless all six components came out, so a failed run
 rem leaves the previous STAGE2 intact.
-path C:\BUILD\STAGE1;C:\DESMET\BIN;C:\DESMET\LIB;Z:\
+rem C:\DESMET\BIN is NOT on this PATH: STAGE1 publishes every tool this build
+rem runs, so behind it the 1987 directory could only ever be a silent
+rem fallback -- and here that would falsify the result, rebuilding stage 1
+rem while calling it stage 2.  C:\DESMET\LIB is the library BIND opens on
+rem every link, not a compiler.
+path C:\BUILD\STAGE1;C:\DESMET\LIB;Z:\
 set DSINC=C:\DESMET\INCLUDE\
 c:
 cd \BUILD
 rem Refuse to run on an empty STAGE1.  A missing dir on the PATH is not an
-rem error in DOS -- the search just falls through to C:\DESMET\BIN and this
-rem would quietly rebuild stage 1 again while claiming to be stage 2.
+rem error in DOS, so without this the run would not fail -- every c88 would
+rem be "Bad command or file name" and MK1 would carry on to the next one.
 if not exist STAGE1\C88.EXE goto empty
 if not exist STAGE1\GEN.EXE goto empty
 if not exist STAGE1\ASM88.EXE goto empty

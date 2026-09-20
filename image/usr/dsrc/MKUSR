@@ -1,0 +1,251 @@
+# MKUSR -- rebuild the DeSmet-built USER PROGRAMS on RealXV6 and check each
+# against the /bin binary that is running the build.
+#
+#     cd /src/rt ; drun mkrt        (once, for the runtime objects)
+#     cd /src/usr ; drun mkusr
+#
+# The user-program counterpart of /src/desmet's mkall: same fixpoint idea,
+# one level out.  Each program is compiled here, linked against ../rt's
+# objects with BIND -A, converted by d2a, and dcmp'd against /bin -- so
+# IDENTICAL means the target reproduces its own userland byte for byte.
+#
+# -i../rt/ is what lets the source stay untouched: every program spells its
+# include "UNIX.H", the prefix makes that ../rt/UNIX.H, and C88 takes options
+# only AFTER the file name (C88.C loops from argv[2]), hence `c88 NAME -i...`
+# and never `c88 -i... NAME`.
+#
+# Every cross-directory object spells its .O explicitly.  BIND appends .O
+# only when the name has no dot at all (BIND.C nextpass: `if (*argat == '.')
+# gotdot=1`), and "../rt/X" is full of dots, so ../rt/CRT0 would be opened
+# verbatim and missed.  That is a clean "cannot open" on both sides now: it
+# was silent here until dbind was relinked against DCRT0 (-1 on error) rather
+# than CRT0 (the kernel's -errno).  That is dbind's OWN runtime -- not the
+# ../rt/CRT0.O being linked below, which stays the -errno one because the
+# programs built here are V6 programs.  See MKALL and ../rt/DCRT0.A.
+#
+# The link list is the V6-flavour one -- ULIB/UCOMPAT/CTIME/SETEXIT, not the
+# tools' DCOMPAT/V6DOS/V6CHAIN -- matching the DOS cross-build's link tail.
+# Objects are removed after each program: with -snapshot the disk is a
+# throwaway overlay, but the free list still has to hold the whole run.
+#
+# The list is MKBIN's, in MKBIN's order: every program that bat compiles
+# through XCC.BAT on the DOS side is rebuilt here on the target.  The other
+# eight in /bin are the toolchain ports, and /src/desmet's mkall does those --
+# so the two scripts between them account for all 45 programs the image
+# carries.  The publish checks exactly that before it will cut a tree: a name
+# in one list and not the other, or in neither, stops it.
+#
+# /init is the one dcmp not aimed at /bin.  The proto puts init at the root,
+# where the kernel looks for it, so the comparison spells /init.
+
+c88 INIT -i../rt/
+dbind ../rt/CRT0.O INIT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OINIT
+d2a INIT.EXE init.new 1000
+dcmp init.new /init
+rm INIT.O INIT.EXE init.new
+
+c88 CAT -i../rt/
+dbind ../rt/CRT0.O CAT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OCAT
+d2a CAT.EXE cat.new 1000
+dcmp cat.new /bin/cat
+rm CAT.O CAT.EXE cat.new
+
+c88 CHMOD -i../rt/
+dbind ../rt/CRT0.O CHMOD ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OCHMOD
+d2a CHMOD.EXE chmod.new 1000
+dcmp chmod.new /bin/chmod
+rm CHMOD.O CHMOD.EXE chmod.new
+
+c88 CP -i../rt/
+dbind ../rt/CRT0.O CP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OCP
+d2a CP.EXE cp.new 1000
+dcmp cp.new /bin/cp
+rm CP.O CP.EXE cp.new
+
+c88 DATE -i../rt/
+dbind ../rt/CRT0.O DATE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ODATE
+d2a DATE.EXE date.new 1000
+dcmp date.new /bin/date
+rm DATE.O DATE.EXE date.new
+
+c88 ECHO -i../rt/
+dbind ../rt/CRT0.O ECHO ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OECHO
+d2a ECHO.EXE echo.new 1000
+dcmp echo.new /bin/echo
+rm ECHO.O ECHO.EXE echo.new
+
+c88 ED -i../rt/
+dbind ../rt/CRT0.O ED ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OED
+d2a ED.EXE ed.new 1000
+dcmp ed.new /bin/ed
+rm ED.O ED.EXE ed.new
+
+c88 FIB -i../rt/
+dbind ../rt/CRT0.O FIB ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OFIB
+d2a FIB.EXE fib.new 1000
+dcmp fib.new /bin/fib
+rm FIB.O FIB.EXE fib.new
+
+c88 FORKTEST -i../rt/
+dbind ../rt/CRT0.O FORKTEST ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OFORKTEST
+d2a FORKTEST.EXE forktest.new 1000
+dcmp forktest.new /bin/forktest
+rm FORKTEST.O FORKTEST.EXE forktest.new
+
+c88 GREP -i../rt/
+dbind ../rt/CRT0.O GREP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OGREP
+d2a GREP.EXE grep.new 1000
+dcmp grep.new /bin/grep
+rm GREP.O GREP.EXE grep.new
+
+c88 ID -i../rt/
+dbind ../rt/CRT0.O ID ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OID
+d2a ID.EXE id.new 1000
+dcmp id.new /bin/id
+rm ID.O ID.EXE id.new
+
+c88 KILL -i../rt/
+dbind ../rt/CRT0.O KILL ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OKILL
+d2a KILL.EXE kill.new 1000
+dcmp kill.new /bin/kill
+rm KILL.O KILL.EXE kill.new
+
+c88 LN -i../rt/
+dbind ../rt/CRT0.O LN ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OLN
+d2a LN.EXE ln.new 1000
+dcmp ln.new /bin/ln
+rm LN.O LN.EXE ln.new
+
+c88 LOGIN -i../rt/
+dbind ../rt/CRT0.O LOGIN ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OLOGIN
+d2a LOGIN.EXE login.new 1000
+dcmp login.new /bin/login
+rm LOGIN.O LOGIN.EXE login.new
+
+c88 LS -i../rt/
+dbind ../rt/CRT0.O LS ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OLS
+d2a LS.EXE ls.new 1000
+dcmp ls.new /bin/ls
+rm LS.O LS.EXE ls.new
+
+c88 MKDIR -i../rt/
+dbind ../rt/CRT0.O MKDIR ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMKDIR
+d2a MKDIR.EXE mkdir.new 1000
+dcmp mkdir.new /bin/mkdir
+rm MKDIR.O MKDIR.EXE mkdir.new
+
+c88 MKFS -i../rt/
+dbind ../rt/CRT0.O MKFS ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMKFS
+d2a MKFS.EXE mkfs.new 1000
+dcmp mkfs.new /bin/mkfs
+rm MKFS.O MKFS.EXE mkfs.new
+
+c88 MKNOD -i../rt/
+dbind ../rt/CRT0.O MKNOD ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMKNOD
+d2a MKNOD.EXE mknod.new 1000
+dcmp mknod.new /bin/mknod
+rm MKNOD.O MKNOD.EXE mknod.new
+
+c88 MORE -i../rt/
+dbind ../rt/CRT0.O MORE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMORE
+d2a MORE.EXE more.new 1000
+dcmp more.new /bin/more
+rm MORE.O MORE.EXE more.new
+
+c88 MOUNT -i../rt/
+dbind ../rt/CRT0.O MOUNT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMOUNT
+d2a MOUNT.EXE mount.new 1000
+dcmp mount.new /bin/mount
+rm MOUNT.O MOUNT.EXE mount.new
+
+c88 NICE -i../rt/
+dbind ../rt/CRT0.O NICE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ONICE
+d2a NICE.EXE nice.new 1000
+dcmp nice.new /bin/nice
+rm NICE.O NICE.EXE nice.new
+
+c88 PS -i../rt/
+dbind ../rt/CRT0.O PS ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OPS
+d2a PS.EXE ps.new 1000
+dcmp ps.new /bin/ps
+rm PS.O PS.EXE ps.new
+
+c88 PWD -i../rt/
+dbind ../rt/CRT0.O PWD ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OPWD
+d2a PWD.EXE pwd.new 1000
+dcmp pwd.new /bin/pwd
+rm PWD.O PWD.EXE pwd.new
+
+c88 RM -i../rt/
+dbind ../rt/CRT0.O RM ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ORM
+d2a RM.EXE rm.new 1000
+dcmp rm.new /bin/rm
+rm RM.O RM.EXE rm.new
+
+c88 SH -i../rt/
+dbind ../rt/CRT0.O SH ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSH
+d2a SH.EXE sh.new 1000
+dcmp sh.new /bin/sh
+rm SH.O SH.EXE sh.new
+
+c88 SIGTEST -i../rt/
+dbind ../rt/CRT0.O SIGTEST ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSIGTEST
+d2a SIGTEST.EXE sigtest.new 1000
+dcmp sigtest.new /bin/sigtest
+rm SIGTEST.O SIGTEST.EXE sigtest.new
+
+c88 SLEEP -i../rt/
+dbind ../rt/CRT0.O SLEEP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSLEEP
+d2a SLEEP.EXE sleep.new 1000
+dcmp sleep.new /bin/sleep
+rm SLEEP.O SLEEP.EXE sleep.new
+
+c88 STTY -i../rt/
+dbind ../rt/CRT0.O STTY ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSTTY
+d2a STTY.EXE stty.new 1000
+dcmp stty.new /bin/stty
+rm STTY.O STTY.EXE stty.new
+
+c88 SYNC -i../rt/
+dbind ../rt/CRT0.O SYNC ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSYNC
+d2a SYNC.EXE sync.new 1000
+dcmp sync.new /bin/sync
+rm SYNC.O SYNC.EXE sync.new
+
+c88 UMOUNT -i../rt/
+dbind ../rt/CRT0.O UMOUNT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OUMOUNT
+d2a UMOUNT.EXE umount.new 1000
+dcmp umount.new /bin/umount
+rm UMOUNT.O UMOUNT.EXE umount.new
+
+c88 WC -i../rt/
+dbind ../rt/CRT0.O WC ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OWC
+d2a WC.EXE wc.new 1000
+dcmp wc.new /bin/wc
+rm WC.O WC.EXE wc.new
+
+c88 DCMP -i../rt/
+dbind ../rt/CRT0.O DCMP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ODCMP
+d2a DCMP.EXE dcmp.new 1000
+dcmp dcmp.new /bin/dcmp
+rm DCMP.O DCMP.EXE dcmp.new
+
+c88 DRUN -i../rt/
+dbind ../rt/CRT0.O DRUN ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ODRUN
+d2a DRUN.EXE drun.new 1000
+dcmp drun.new /bin/drun
+rm DRUN.O DRUN.EXE drun.new
+
+c88 HELLO -i../rt/
+dbind ../rt/CRT0.O HELLO ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OHELLO
+d2a HELLO.EXE hello.new 1000
+dcmp hello.new /bin/hello
+rm HELLO.O HELLO.EXE hello.new
+
+c88 ZOMBIE -i../rt/
+dbind ../rt/CRT0.O ZOMBIE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OZOMBIE
+d2a ZOMBIE.EXE zombie.new 1000
+dcmp zombie.new /bin/zombie
+rm ZOMBIE.O ZOMBIE.EXE zombie.new
+
+echo === MKUSR FIXPOINT OK ===

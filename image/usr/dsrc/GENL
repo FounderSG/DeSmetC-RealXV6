@@ -1,0 +1,1 @@
+../rt/DCRT0.O GEN GEN2 GEN3 GEN4 GEN5 GEN6 ../rt/V6CHAIN.O ../rt/SYSCALL.O ../rt/USTR.O ../rt/DCOMPAT.O ../rt/V6DOS.O ../rt/V6MISC.O -A -L../rt/ -OGENV6

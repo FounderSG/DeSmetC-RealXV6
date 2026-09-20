@@ -34,8 +34,12 @@ rem word that CRT0 contributes at the very start of DSEG.
 rem
 rem Needs C:\BUILD\STAGE2 -- run STAGE1 then STAGE2 first, or just CROSS.
 rem The driver that uses all this is C:\XCC\XCC.BAT: "XCC PROG".
-path C:\BUILD\STAGE2;C:\DESMET\BIN;C:\DESMET\LIB;Z:\
-set DSINC=C:\XV6\RT\;C:\DESMET\INCLUDE\
+rem The PATH carries no second compiler: STAGE2 publishes every tool this bat
+rem runs, so C:\DESMET\BIN could only ever be a silent fallback.  Only the
+rem library is taken from C:\DESMET -- CSTDIO.S, which BIND opens on every
+rem link, as above.
+path C:\BUILD\STAGE2;C:\DESMET\LIB;Z:\
+set DSINC=C:\XV6\RT\
 c:
 cd \BUILD
 if not exist STAGE2\C88.EXE goto nostage2

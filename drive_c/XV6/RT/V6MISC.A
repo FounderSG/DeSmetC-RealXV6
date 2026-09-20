@@ -1,0 +1,23 @@
+; V6MISC.A -- assembly-level odds and ends for running DeSmet tools on
+; RealXV6 (companions to V6DOS.C).
+;
+; _MSDOS2_ = 0 makes the tools take their DOS-1.x paths: in BIND.C the
+; whole environ()/findfile() PATH machinery is gated on _msdos2, so the
+; library is simply opened in the current directory (or via -L).
+; _PCB_ is only read by that dead code but must still resolve.
+
+        DSEG
+        PUBLIC  _MSDOS2_
+        PUBLIC  _PCB_
+_MSDOS2_:DB     0
+_PCB_:  DW      0
+
+        CSEG
+        PUBLIC  _SHOWSP_
+
+; unsigned _showsp() -- the caller's stack pointer.
+_SHOWSP_:
+        MOV     AX,SP
+        ADD     AX,2            ; undo our own return address
+        RET
+        END

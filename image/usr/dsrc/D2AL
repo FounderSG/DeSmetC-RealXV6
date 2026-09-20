@@ -1,0 +1,1 @@
+../rt/DCRT0.O D2A ../rt/SYSCALL.O ../rt/DCOMPAT.O ../rt/PRINTF.O -A -L../rt/ -OD2AV6

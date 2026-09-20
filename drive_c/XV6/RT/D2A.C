@@ -9,7 +9,7 @@
  * Links DCOMPAT (not UCOMPAT): it needs the DOS-flavor exit(status) so a
  * nonzero exit reaches drun/DOS ERRORLEVEL, and the 1-arg creat(name).
  *
- * Layout facts (probed in drive_c\XV6\PROBE, cross-checked against BIND.C):
+ * Layout facts, measured and cross-checked against BIND.C:
  *   - BIND writes e_sp = alldata + 0x7F (BIND.C:797, stacklen==0 under -A)
  *     and prints that SAME alldata as the -P map "data=" field (BIND.C:894),
  *     so the total static data (init+bss) is exactly e_sp - 0x7F: no map

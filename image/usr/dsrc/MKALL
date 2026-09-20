@@ -1,0 +1,97 @@
+# MKALL -- rebuild the ENTIRE DeSmet C 3.03 toolchain from source ON
+# RealXV6, in one shot, and prove the self-host FIXPOINT: every component
+# the target compiler rebuilds must come out byte-identical to the /bin
+# binary that is running the build.  Driven by drun (the ".bat for V6").
+#
+#     cd /src/rt ; drun mkrt        (once, for the runtime objects)
+#     cd /src/desmet ; drun mkall
+#
+# The running /bin/{c88,gen,asm88,dbind,dlib88,d2a} compile each component's
+# own source, dbind links it with the freshly rebuilt runtime, d2a converts
+# the .exe to an a.out, and dcmp checks it against /bin -- IDENTICAL means
+# the compiler reproduced itself exactly.  /bin is the fixpoint toolchain
+# itself -- the build that reproduces its own bytes -- which is what lets
+# this rebuild land on it.
+#
+# The runtime it links is /src/rt's, reached as ../rt/NAME.O with -L../rt/
+# for CSTDIO.S (see the BIND response files next to this script), so it is
+# built once by /src/rt/mkrt and shared with /src/usr rather than duplicated.
+#
+# The .O must be spelled out.  BIND supplies it only for a name with no dot
+# (BIND.C nextpass sets gotdot on any '.'), and "../rt/X" has two, so
+# ../rt/CRT0 is opened verbatim and missed -- now a plain "cannot open", as
+# on DOS.  It used to be silent: a failed syscall returns -errno rather than
+# -1 (KEN/TRAP.C sets u_ar0[R0] = -u.u_error), so BIND's `== -1` test let -2
+# stand as a file descriptor and it read on with the previous file's buffer.
+# dbind now links DCRT0 -- CRT0 with SYSCALL_ returning -1 and the code in
+# ERRNO_, the convention those 126 `== -1` tests were written to.  User
+# programs keep CRT0 and the kernel's -errno; see ../rt/DCRT0.A.
+#
+# A leading '-' tells drun to ignore that step's status: C88 returns exit
+# code 1 on a mere warning, and the vintage K&R compiler sources warn (e.g.
+# ASM3's global-struct-member idiom, legal in 3.03) while compiling fine.
+# The strict steps -- dbind, d2a and especially dcmp -- still abort the run,
+# so a real compile failure surfaces at link/convert and a fixpoint DIFFER
+# stops immediately.  Tool argv names are the canonical UPPER-case DOS
+# basenames; DCOMPAT's case-insensitive open() finds the on-disk headers
+# whatever case each #include spells them.
+
+
+# --- gen : pass 2 (code generator) ---
+-c88 GEN
+-c88 GEN2
+-c88 GEN3
+-c88 GEN4
+-c88 GEN5
+-c88 GEN6
+dbind -fGENL
+d2a GENV6.EXE gen.new 1000
+dcmp gen.new /bin/gen
+rm GEN.O GEN2.O GEN3.O GEN4.O GEN5.O GEN6.O GENV6.EXE gen.new
+
+# --- c88 : pass 1 (parser / front end) ---
+-c88 C88
+-c88 C2
+-c88 C3
+-c88 C4
+-c88 C5
+-c88 C6
+-c88 C7
+dbind -fC88L
+d2a C88V6.EXE c88.new 1000
+dcmp c88.new /bin/c88
+rm C88.O C2.O C3.O C4.O C5.O C6.O C7.O C88V6.EXE c88.new
+
+# --- asm88 : the 8088 assembler (ASM3 warns; '-' ignores the warning exit) ---
+-c88 ASM88
+-c88 ASM2
+-c88 ASM3
+-c88 ASM4
+-c88 ASM5
+dbind -fASML
+d2a ASM88V6.EXE asm88.new 1000
+dcmp asm88.new /bin/asm88
+rm ASM88.O ASM2.O ASM3.O ASM4.O ASM5.O ASM88V6.EXE asm88.new
+
+# --- bind : the linker ---
+-c88 BIND
+dbind -fBINDL
+d2a BINDV6.EXE dbind.new 1000
+dcmp dbind.new /bin/dbind
+rm BIND.O BINDV6.EXE dbind.new
+
+# --- lib88 : the librarian ---
+-c88 LIB88
+dbind -fLIBL
+d2a LIB88V6.EXE dlib88.new 1000
+dcmp dlib88.new /bin/dlib88
+rm LIB88.O LIB88V6.EXE dlib88.new
+
+# --- d2a : the .exe -> a.out converter itself ---
+c88 D2A -i../rt/
+dbind -fD2AL
+d2a D2AV6.EXE d2a.new 1000
+dcmp d2a.new /bin/d2a
+rm D2A.O D2AV6.EXE d2a.new
+
+echo === MKALL FIXPOINT OK ===
