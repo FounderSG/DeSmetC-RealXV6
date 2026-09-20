@@ -1,0 +1,18 @@
+; ZEND.A -- end-of-initialized-data marker.  LAST in the BIND list.
+;
+; BIND pads the EXE image out to a whole 512-byte page, so the size of the
+; file's data region overstates the real initialized data and cannot be used
+; to locate the start of BSS.  BIND also publishes no end-of-data symbol.
+;
+; This word is therefore the last initialized datum in the link, and BSS
+; begins immediately after it; e2c reads its address from the -P map
+; and patches BSSBEG_ with ENDDATA_+2 so the startup clears exactly the right
+; range.  (Getting this wrong left the front of the u-area uncleared, since
+; the padded estimate landed *inside* u.)
+	DSEG
+	PUBLIC	ENDDATA_
+ENDDATA_:
+	DW	0
+
+	CSEG
+	END

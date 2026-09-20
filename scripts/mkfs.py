@@ -16,7 +16,8 @@ Differences from the C: i_size0 is written, so files of 64 KB or more record
 their true 24-bit size (the C carried nothing past i_size1); each entry's
 content is written in one go, so block numbers differ; the rk/rp free-list
 interleave is gone, having keyed off the image *filename*.  Timestamps stay
-0, so the image is reproducible.
+0 and text is written LF (is_text_source), so the image is reproducible:
+the same tree gives the same image, on any host and from any checkout.
 
 Usage:
     python mkfs.py IMAGE PROTO [-D NAME=PATH]...
@@ -57,6 +58,40 @@ TYPE_CHARS = {"-": FileType.REGULAR, "b": FileType.BLOCK,
               "c": FileType.CHAR, "d": FileType.DIRECTORY}
 MODE_RE = re.compile(r"([-bcd])([u-])([g-])([0-7]{3})")
 
+# Source suffixes that go onto the image as text, hence as LF.  ".A" is
+# assembler source; ".S" is DeSmet's library format and is NOT here.
+TEXT_SUFFIXES = {".c", ".h", ".a", ".asm", ".ed", ".rsp"}
+
+
+def is_text_source(path):
+    """Is this host file something the target reads as text?
+
+    Every text file reaches the image with LF line endings, whatever the
+    host has on disk.  The target is a Unix: it has no DOS text mode, so a
+    CR is simply a byte in the line, and whether one is there must not
+    depend on a checkout convention -- a published tree carries no
+    .gitattributes, and `core.autocrlf` differs from machine to machine.
+    Most readers on the image cope with a CR anyway (c88 classes it as
+    white space, asm88 and BIND's -f reader do the same, drun strips it),
+    but ed does not: it takes a CR where it wants a newline as a syntax
+    error, seeks its command input to EOF and exits having written
+    nothing, so `ed KEN/MAIN.C <banner.ed` silently edits nothing.
+    Normalizing here fixes that for every reader at once, and makes the
+    image a function of this tree's content rather than of the checkout it
+    was built from -- which is what lets the byte counts in the evidence
+    logs be reproduced.
+
+    Decided by name, never by sniffing the bytes: the image also carries
+    a.out binaries (.AO/.aout), objects (.O), a DeSmet library (.S), .COM
+    kernels, .EXE links and a floppy golden, and a CR LF pair inside one of
+    those is data.  The extensionless entries are all scripts -- the drun
+    scripts under usr/dsrc and usr/dtest.  A text file whose suffix is
+    missing from the list keeps its CRs and still works; that is the safe
+    direction for this list to be wrong in, and content() rejects the
+    unsafe one (a NUL byte in something named like text).
+    """
+    return path.suffix == "" or path.suffix.lower() in TEXT_SUFFIXES
+
 
 class MkfsError(Exception):
     """A malformed proto file, a missing input, or a filesystem too small."""
@@ -96,16 +131,26 @@ class Node:
 
     def content(self):
         """This entry's bytes.  A directory's content is its entry table, so
-        every inode number must be assigned before anything is written."""
+        every inode number must be assigned before anything is written.
+
+        Text arrives as LF: see is_text_source()."""
         if self.is_dir:
             entries = [(self.parent.ino, ".."), (self.ino, ".")]
             entries += [(child.ino, child.name) for child in self.children]
             return b"".join(dirent(ino, name) for ino, name in entries)
         try:
-            return self.source.read_bytes()
+            data = self.source.read_bytes()
         except OSError as exc:
             raise MkfsError("%s: cannot read %s: %s"
                             % (self.origin, self.source, exc.strerror))
+        if is_text_source(self.source):
+            if b"\0" in data:
+                raise MkfsError(
+                    "%s: %s is named like text but holds NUL bytes; mkfs "
+                    "would have stripped CRs out of a binary" % (self.origin,
+                                                                 self.source))
+            data = data.replace(b"\r\n", b"\n")
+        return data
 
 
 def dirent(ino, name):

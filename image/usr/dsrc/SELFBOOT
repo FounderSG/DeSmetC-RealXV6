@@ -1,0 +1,70 @@
+# SELFBOOT -- RealXV6 changes its own kernel and boots the result.
+#
+#     /bin/mount /dev/rk1 /src
+#     drun /src/sys/selfboot
+#
+# mkkern proves the target rebuilds its kernel byte-identical to the
+# golden.  That is reproduction; this is authorship.  The banner in
+# KEN/MAIN.C is edited HERE, by ed, on the machine itself; the kernel is
+# recompiled, folded into a .COM, laid onto a 360K floppy image, written
+# to the medium the machine boots from, and the machine is reset.  What
+# comes back prints the new string, and nothing outside this disk was
+# involved in any step of it.
+#
+# So this deliberately does NOT dcmp against /test/REFK.COM.  It cannot:
+# the source no longer matches the golden, which is the entire point.
+# mkkern is the run that checks the toolchain reproduces; this is the run
+# that checks the system can be changed.
+#
+# RUN mkkern FIRST.  After ed, only MAIN.O is stale, so this recompiles
+# that one source and relinks -- a minute rather than the half hour 32
+# compiles take.  Without mkkern's objects the dbind below fails to open
+# the first .O and drun stops there.
+#
+# ed's exit status is no use as a check: a substitute that matches
+# nothing prints '?' and ed carries on, writes the file back unchanged
+# and quits happily.  So grep is the guard -- it exits nonzero when the
+# new string is absent, which stops the run before a kernel that was
+# never edited gets written to the boot floppy.
+#
+# The boot sector is assembled here as well, and dcmp'd against the
+# vendored BOOT.COM before anything is written.  Getting that wrong would
+# not fail loudly: it would produce a floppy the BIOS cannot boot, and
+# the only symptom would be a machine that never comes back.
+#
+# The image is built as a file and copied to /dev/fd0 rather than written
+# to the device directly: mkboot ends by reading its output back and
+# checking there is nothing beyond it, and on a block special that read
+# hits the end of the medium as an error rather than as EOF.  cp needs no
+# special case -- creat() on an existing special file skips itrunc, so
+# the node keeps its major/minor and the write goes through writei's
+# IFBLK path straight to fdstrategy.
+#
+# reboot(2) is what makes the result survivable: it flushes the buffer
+# cache and waits for the disk inside the kernel, then pulses the 8042
+# reset line.  See RT/REBOOT.C for why a user-mode sync() would not do.
+
+cd /src/sys
+
+# --- edit the kernel's banner, on the machine, with the machine's editor
+ed KEN/MAIN.C <banner.ed
+grep DeSmet KEN/MAIN.C
+
+# --- rebuild: only MAIN.C changed
+c88 KEN/MAIN -iH/
+dbind -fKERNL
+e2c UNIX.EXE UNIX.COM UNIX.MAP
+
+# --- assemble the boot sector and check it against the vendored one
+asm88 BOOT/BOOTSEC
+dbind -fBOOTL
+mkboot -s BOOTSEC.EXE BOOTSEC.COM
+dcmp BOOTSEC.COM BOOT.COM
+
+# --- lay the floppy down and put it on the medium
+mkboot BOOTSEC.COM UNIX.COM UNIX360.IMG
+cp UNIX360.IMG /dev/fd0
+echo === SELFBOOT WRITTEN ===
+
+# --- flush, reset, and come back up on what we just wrote
+reboot

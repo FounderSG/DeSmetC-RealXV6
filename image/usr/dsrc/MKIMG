@@ -1,0 +1,66 @@
+# MKIMG -- build the RealXV6 BOOT FLOPPY on RealXV6.  The step after mkkern:
+# where mkkern rebuilds the kernel and folds it into a .COM, this lays that
+# .COM onto the medium the machine boots from.  Driven by drun:
+#
+#     cd /src/sys ; drun mkimg
+#
+# The on-target version of the host build that laid this tree's own floppy,
+# and the layout has nothing to it:
+#
+#     720 zero sectors, boot.com at sector 0, unix.com at sector 1
+#
+# The boot sector is ASSEMBLED HERE, not carried: BOOT/BOOTSEC.A is the
+# DeSmet ASM88 port of it, and asm88 + dbind + mkboot -s turn that into the
+# 512 bytes the BIOS loads.  mkboot -s does the last cut (strip the MZ
+# header, zero-fill to 510, stamp 55 AA) because ASM88 has no ORG directive,
+# so the signature has no spelling in the source.
+#
+# BOOT.COM is the older build of that same sector, from the toolchain the
+# port was made from, and is kept only as the golden to dcmp against.
+# IDENTICAL there means the DeSmet assembler reproduced it byte for byte,
+# and the floppy below is then built from the sector THIS MACHINE
+# assembled, not from the carried one.
+#
+# What that sector does: read floppy sectors 1..119 into 1000h:0100h and
+# far-jump there with SS = 1000h -- exactly the .COM convention e2c targets,
+# which is why the DeSmet kernel needs no adapting to it.
+#
+# BOOTL passes -L../rt/ for the same reason KERNL does, even though a boot
+# sector references nothing in the library: BIND opens CSTDIO.S regardless,
+# and with _MSDOS2_ = 0 it never reaches findfile(), so it opens the bare
+# name in the current directory.  On DOS the PATH hid this (C:\DESMET\LIB is
+# on it); here the first run died with "cannot open CSTDIO.S / BIND
+# abandoned".  Nothing is pulled from it -- the object comes out the same
+# 114 bytes either way -- it just has to be openable.
+#
+# The kernel input is /test/REFK.COM, not the UNIX.COM mkkern leaves in this
+# directory, and that is deliberate:
+#
+#   * it is the same golden mkkern's last step proves the target's own
+#     rebuild equal to, so "mkimg made a floppy of REFK.COM" plus "mkkern
+#     made a UNIX.COM IDENTICAL to REFK.COM" is the whole claim, without
+#     this script depending on a 30-minute kernel build having just run;
+#   * space.  The floppy is 720 blocks and a fresh image has about 900
+#     free; mkkern's own objects and UNIX.EXE take roughly 460 of those, so
+#     the two do not fit in one boot unless the intermediates are removed
+#     first.  Keeping them apart keeps both well inside the disk.
+#
+# mkboot verifies what it wrote by reading the whole image back and
+# comparing it against the two inputs and against zero, so a short write --
+# the realistic failure here, this being 720 blocks into a filesystem with
+# ~900 free -- fails loudly instead of a floppy that dies in the BIOS.
+# That is self-consistency, though, so the layout itself is checked against
+# a HOST-built golden first: the same three placements (boot sector at 0,
+# payload at 1, zero fill to the end) in an 8-sector image, which dcmp can
+# compare byte for byte for 8 blocks instead of 720.  /test/REFF.IMG is the
+# host build of that same layout, so IDENTICAL means the target's mkboot
+# and the host's agree on the format.  Its payload is the boot sector again
+# -- any file drives the same code path, and this one is already here.
+asm88 BOOT/BOOTSEC
+dbind -fBOOTL
+mkboot -s BOOTSEC.EXE BOOTSEC.COM
+dcmp BOOTSEC.COM BOOT.COM
+mkboot BOOTSEC.COM BOOTSEC.COM /tmp/TINY.IMG 8
+dcmp /tmp/TINY.IMG /test/REFF.IMG
+mkboot BOOTSEC.COM /test/REFK.COM /tmp/UNIX360.IMG
+echo === MKIMG FLOPPY OK ===

@@ -1,0 +1,1 @@
+../rt/DCRT0.O MKBOOT ../rt/SYSCALL.O ../rt/DCOMPAT.O ../rt/PRINTF.O -A -L../rt/ -OMKBOOTV6

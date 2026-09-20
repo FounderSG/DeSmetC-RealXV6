@@ -236,6 +236,18 @@ d2a DRUN.EXE drun.new 1000
 dcmp drun.new /bin/drun
 rm DRUN.O DRUN.EXE drun.new
 
+c88 REBOOT -i../rt/
+dbind ../rt/CRT0.O REBOOT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OREBOOT
+d2a REBOOT.EXE reboot.new 1000
+dcmp reboot.new /bin/reboot
+rm REBOOT.O REBOOT.EXE reboot.new
+
+c88 FDTEST -i../rt/
+dbind ../rt/CRT0.O FDTEST ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OFDTEST
+d2a FDTEST.EXE fdtest.new 1000
+dcmp fdtest.new /bin/fdtest
+rm FDTEST.O FDTEST.EXE fdtest.new
+
 c88 HELLO -i../rt/
 dbind ../rt/CRT0.O HELLO ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OHELLO
 d2a HELLO.EXE hello.new 1000

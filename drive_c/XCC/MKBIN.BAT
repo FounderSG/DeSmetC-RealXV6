@@ -117,6 +117,10 @@ call \XCC\XCC.BAT DCMP
 if not exist DCMP.AO goto bad
 call \XCC\XCC.BAT DRUN
 if not exist DRUN.AO goto bad
+call \XCC\XCC.BAT REBOOT
+if not exist REBOOT.AO goto bad
+call \XCC\XCC.BAT FDTEST
+if not exist FDTEST.AO goto bad
 call \XCC\XCC.BAT HELLO
 if not exist HELLO.AO goto bad
 call \XCC\XCC.BAT ZOMBIE
@@ -129,6 +133,8 @@ copy \BUILD\XV6BIN\ASM88.AO \XV6\BIN
 copy \BUILD\XV6BIN\DBIND.AO \XV6\BIN
 copy \BUILD\XV6BIN\DLIB88.AO \XV6\BIN
 copy \BUILD\XV6BIN\D2A.AO \XV6\BIN
+copy \BUILD\XV6BIN\E2C.AO \XV6\BIN
+copy \BUILD\XV6BIN\MKBOOT.AO \XV6\BIN
 if not exist \XV6\BIN\SH.AO goto badpub
 if not exist \XV6\BIN\C88.AO goto badpub
 

@@ -1,7 +1,6 @@
-RPGmonitor alive
-entering V86 unix
 Unix Ready.
 init: starting sh
+# /bin/mount /dev/rk1 /src
 # cd /src/rt
 # drun mkrt
 + asm88 CRT0
@@ -122,6 +121,24 @@ d2a: D2AV6.EXE -> d2a.new text=4608 data=1024 bss=16703 stack=4096 entry=2
 + dcmp d2a.new /bin/d2a
 IDENTICAL (5648 bytes)
 + rm D2A.O D2AV6.EXE d2a.new
++ c88 E2C -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0CA5H code   0B4AH data        28% Utilization    + dbind -fE2CL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        11% utilization    + d2a E2CV6.EXE e2c.new 1000
+d2a: E2CV6.EXE -> e2c.new text=6144 data=1536 bss=1418 stack=4096 entry=2
++ dcmp e2c.new /bin/e2c
+IDENTICAL (7696 bytes)
++ rm E2C.O E2CV6.EXE e2c.new
++ c88 MKBOOT -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0EEEH code   0E2CH data        26% Utilization    + dbind -fMKBOOTL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        11% utilization    + d2a MKBOOTV6.EXE mkboot.new 1000
+d2a: MKBOOTV6.EXE -> mkboot.new text=6656 data=2048 bss=1644 stack=4096 entry=2
++ dcmp mkboot.new /bin/mkboot
+IDENTICAL (8720 bytes)
++ rm MKBOOT.O MKBOOTV6.EXE mkboot.new
 + echo === MKALL FIXPOINT OK ===
 === MKALL FIXPOINT OK ===
 === DRUN DONE ===

@@ -1,0 +1,96 @@
+Unix Ready.
+init: starting sh
+# /bin/mount /dev/rk1 /src
+# cd /src/sys
+# drun mkkern
++ c88 KEN/ALLOC -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     06F2H code   0037H data        57% Utilization    + c88 KEN/CLOCK -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     025FH code   0000H data        55% Utilization    + c88 KEN/FIO -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     03CFH code   0329H data        56% Utilization    + c88 KEN/IGET -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     053AH code   001DH data        55% Utilization    + c88 KEN/MAIN -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00D4H code   1BA7H data        56% Utilization    + c88 KEN/MALLOC -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0178H code   0000H data        55% Utilization    + c88 KEN/NAMI -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     02D8H code   0000H data        55% Utilization    + c88 KEN/PIPE -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     02E7H code   0000H data        55% Utilization    + c88 KEN/PRF -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0185H code   0041H data        56% Utilization    + c88 KEN/RDWRI -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0438H code   0000H data        55% Utilization    + echo === KEN HALF ===
+=== KEN HALF ===
++ c88 KEN/SIG -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0221H code   000DH data        55% Utilization    + c88 KEN/SLP -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     084FH code   0016H data        57% Utilization    + c88 KEN/SUBR -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0413H code   0000H data        55% Utilization    + c88 KEN/SYS1 -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     083DH code   000CH data        56% Utilization    + c88 KEN/SYS2 -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     056EH code   0000H data        55% Utilization    + c88 KEN/SYS3 -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     044DH code   0000H data        55% Utilization    + c88 KEN/SYS4 -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     062CH code   0038H data        56% Utilization    + c88 KEN/SYSENT -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0000H code   0100H data        44% Utilization    + c88 KEN/TEXT -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0497H code   004BH data        56% Utilization    + c88 KEN/TRAP -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     009BH code   0000H data        55% Utilization    + echo === KEN BUILT ===
+=== KEN BUILT ===
++ c88 DMR/BIO -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     09CCH code   1FBBH data        57% Utilization    + c88 DMR/FD -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0371H code   023FH data        57% Utilization    + c88 DMR/IDE -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     01B4H code   000AH data        56% Utilization    + c88 DMR/KBD -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     01ECH code   050AH data        6% Utilization    + c88 DMR/KL -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     01FCH code   0028H data        56% Utilization    + c88 DMR/MEM -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0106H code   0000H data        55% Utilization    + c88 DMR/PC -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+end of C88        0857 code   0004 data   56% utilization+ c88 DMR/RK -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0253H code   0021H data        56% Utilization    + c88 DMR/TTY -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0AA9H code   0445H data        57% Utilization    + c88 DMR/UART -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     012AH code   0000H data        4% Utilization    + c88 DMR/DPAD -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0000H code   4080H data        0% Utilization    + c88 DMR/DPAD2 -iH/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0000H code   4080H data        0% Utilization    + asm88 DMR/M86
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        02B6 code   0082 data   3% utilization+ asm88 DMR/CPAD
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        0100 code   0000 data   1% utilization+ asm88 DMR/ZEND
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        0000 code   0002 data   1% utilization+ echo === DMR BUILT ===
+=== DMR BUILT ===
++ dbind -fKERNL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        15% utilization    + e2c UNIX.EXE UNIX.COM UNIX.MAP
+e2c: UNIX.EXE -> UNIX.COM
+  code segment in EXE : 31744 bytes (spacer 256 + real 31488)
+  real code  to .COM offset 0000..7b00  (segment 0100..)
+  real data  to .COM offset 8000..8900  (segment 8100..)
+  .COM size           : 35072 bytes
+  BSS cleared up to   : DS:ce3b patched at DS:8100
++ dcmp UNIX.COM /test/REFK.COM
+IDENTICAL (35072 bytes)
++ echo === MKKERN KERNEL OK ===
+=== MKKERN KERNEL OK ===
+=== DRUN DONE ===
+# 

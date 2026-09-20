@@ -1,0 +1,14 @@
+#include <pc.h>
+#include <param.h>
+#include <reg.h>
+#include <text.h>
+#include <buf.h>
+#include <conf.h>
+#include <inode.h>
+#include <filsys.h>
+#include <file.h>
+#include <user.h>
+#include <tty.h>
+#include <proc.h>
+#include <exec.h>
+#include <systm.h>

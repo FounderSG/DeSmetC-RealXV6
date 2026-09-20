@@ -1,10 +1,12 @@
 @echo off
 rem XV6 - build the RealXV6 CROSS COMPILER: the DeSmet toolchain itself,
 rem relinked to run ON RealXV6 instead of on DOS.  Builds in C:\XV6\SRC and
-rem publishes six a.out to C:\BUILD\XV6BIN, which MKBIN then collects:
+rem publishes eight a.out to C:\BUILD\XV6BIN, which MKBIN then collects:
 rem
 rem   C88.AO GEN.AO ASM88.AO DBIND.AO DLIB88.AO   the five tool ports
 rem   D2A.AO                                      the .exe to a.out converter
+rem   E2C.AO                                      the .exe to .COM converter
+rem   MKBOOT.AO                                   the .COM to boot floppy
 rem
 rem Not a numbered stage: STAGE1/STAGE2 iterate the same DOS toolchain on
 rem itself, while this retargets the settled one at another operating system.
@@ -77,11 +79,13 @@ rem than -errno, which is what the vintage tools' `== -1` tests need.
 echo.
 echo === XV6 runtime ===
 for %%f in (CRT0 DCRT0 V6MISC) do asm88 %%f
-for %%f in (SYSCALL USTR DCOMPAT V6DOS V6CHAIN PRINTF D2A) do c88 %%f
+for %%f in (SYSCALL USTR DCOMPAT V6DOS V6CHAIN PRINTF D2A E2C MKBOOT) do c88 %%f
 if not exist CRT0.O goto bad
 if not exist DCRT0.O goto bad
 if not exist V6CHAIN.O goto bad
 if not exist D2A.O goto bad
+if not exist E2C.O goto bad
+if not exist MKBOOT.O goto bad
 
 rem --- d2a: the DOS build converts every .exe below, and the -A build is
 rem     itself a target (/bin/d2a), so a.out can also be made on RealXV6 ---
@@ -93,6 +97,30 @@ bind DCRT0 D2A SYSCALL DCOMPAT PRINTF -A -PD2AV6.MAP -OD2AV6
 d2a D2AV6.EXE D2A.AO 1000
 if not exist D2A.AO goto bad
 echo XV6: d2a OK
+
+rem --- e2c: the same deal for the kernel .COM.  The -A build is /bin/e2c,
+rem     so a bootable unix.com can be made on RealXV6 too ---
+echo.
+echo === XV6 e2c ===
+bind e2c
+if not exist E2C.EXE goto bad
+bind DCRT0 E2C SYSCALL DCOMPAT PRINTF -A -PE2CV6.MAP -OE2CV6
+d2a E2CV6.EXE E2C.AO 1000
+if not exist E2C.AO goto bad
+echo XV6: e2c OK
+
+rem --- mkboot: the step after e2c.  It lays the boot sector and the kernel
+rem     .COM onto a 360K floppy image: 720 zero sectors, the sector at 0, the
+rem     kernel from 1.  The -A build is /bin/mkboot, so the target can
+rem     produce the medium it boots from ---
+echo.
+echo === XV6 mkboot ===
+bind mkboot
+if not exist MKBOOT.EXE goto bad
+bind DCRT0 MKBOOT SYSCALL DCOMPAT PRINTF -A -PMKBOOTV6.MAP -OMKBOOTV6
+d2a MKBOOTV6.EXE MKBOOT.AO 1000
+if not exist MKBOOT.AO goto bad
+echo XV6: mkboot OK
 
 echo.
 echo === XV6 c88 ===
@@ -141,6 +169,8 @@ copy ASM88.AO  \BUILD\XV6BIN
 copy DBIND.AO  \BUILD\XV6BIN
 copy DLIB88.AO \BUILD\XV6BIN
 copy D2A.AO    \BUILD\XV6BIN
+copy E2C.AO    \BUILD\XV6BIN
+copy MKBOOT.AO \BUILD\XV6BIN
 echo.
 echo XV6: ALL OK - published to C:\BUILD\XV6BIN
 goto end

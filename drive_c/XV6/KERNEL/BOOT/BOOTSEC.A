@@ -1,0 +1,128 @@
+; BOOTSEC.A -- DeSmet ASM88 port of the RealXV6 boot sector.
+; Translated instruction for instruction, and in the original order, from the
+; wasm source it was built from: this is the one piece of the boot chain that
+; used to arrive as a binary from another toolchain, and the point of the port
+; is that RealXV6 can now assemble the sector it boots from with its own
+; assembler.  BOOT.COM is that older build, kept as the golden mkimg and
+; selfboot dcmp the assembled sector against.
+;
+; What it does: the BIOS loads THIS sector at 0000:7C00 and jumps to it.
+; It reads floppy sectors 1..119 one at a time with INT 13h AH=2 into
+; 1000h:0100h upward, then sets SS = 1000h, SP = FFFEh and far-jumps to
+; 1000h:0100h -- the .COM convention E2C.C targets, which is why a
+; DeSmet-built kernel is loadable by it unchanged.
+;
+; ASM88 differences from wasm, all of them mechanical:
+;   - no SEGMENT/GROUP/PROC/ENDP: a bare CSEG and named labels.
+;   - no ORG.  wasm placed the signature with "org 02FEh / dw 0AA55h";
+;     here the 512-byte sector image is finished by the converter
+;     (mkboot -s), which zero-fills to 510 and stamps 55 AA -- the same way
+;     the original build placed it.
+;   - the long form of RET is LRET (likewise LCALL / LJMP).
+;   - ASM88 optimizes jumps itself, so the short/near choice is not spelled.
+;
+; The code is position-independent -- every transfer is relative and no
+; absolute offset is taken -- which is why wasm's "org 0100h" was harmless
+; even though the BIOS loads the sector at 7C00h.  Keep it that way: an
+; OFFSET here would be wrong at run time, and nothing would say so.
+;
+; Link: bind BOOTSEC -A -OBOOTSEC   (-A: no DOS startup, execution begins at
+; the first instruction of the first object, so this label lands at CS:0).
+
+	CSEG
+	PUBLIC	BOOTSEC
+
+SECPTRK	EQU	9		; sectors per track  (360K floppy geometry:
+NHEADS	EQU	2		; heads               2 * 40 * 9 = 720)
+STOP	EQU	120		; read while SI < 120, i.e. sectors 1..119
+LOADSEG	EQU	1000H		; kernel load address 1000h:0100h
+LOADOFF	EQU	100H
+
+BOOTSEC:
+	MOV	AX,800H		; scratch stack below 10000h while loading
+	MOV	SP,AX
+
+	MOV	AX,LOADSEG	; ES:BX = where the next sector goes
+	MOV	ES,AX
+	MOV	BX,LOADOFF
+
+	MOV	SI,1		; LBA of the first kernel sector
+
+RDLOOP:	CALL	RDBLOCK
+	JC	RDFAIL
+	ADD	BX,512		; next sector, next 512 bytes of the segment
+	INC	SI
+	CMP	SI,STOP
+	JB	RDLOOP
+
+	MOV	SP,0FFFEH	; kernel stack: SS:SP = 1000h:FFFEh
+	MOV	AX,ES
+	MOV	SS,AX
+	PUSH	AX		; CS = 1000h
+	MOV	AX,LOADOFF
+	PUSH	AX		; IP = 0100h
+	LRET			; far jump to the kernel entry
+
+RDFAIL:	MOV	AH,0		; BIOS reset disk, then retry the same sector
+	INT	13H
+	JMP	RDLOOP
+
+; ---- read the sector whose LBA is in SI to ES:BX -------------------
+; Carry set on failure (from INT 13h).  Every register but the flags is
+; preserved, which is what lets the caller keep its LBA in SI and its
+; buffer pointer in BX across the call.
+
+RDBLOCK:
+	PUSH	AX
+	PUSH	BX
+	PUSH	CX
+	PUSH	DX
+	PUSH	SI
+	PUSH	DI
+	PUSH	BP
+
+	MOV	AX,SI		; LBA to CHS, in CH/CL/DH
+	CALL	LBACHS
+	MOV	AH,2		; INT 13h AH=2: read sectors
+	MOV	AL,1		; ... one of them
+	INT	13H
+
+	POP	BP
+	POP	DI
+	POP	SI
+	POP	DX
+	POP	CX
+	POP	BX
+	POP	AX
+	RET
+
+; ---- LBA in AX to CHS ----------------------------------------------
+; Out: CH = cylinder, CL = sector (1-based, low 6 bits), DH = head,
+;      DL = 0 (drive 0).  BX is preserved; AX and DX are not.
+
+LBACHS:
+	PUSH	BX
+
+	MOV	CX,SECPTRK*NHEADS	; cylinder = LBA / (spt * heads)
+	XOR	DX,DX
+	DIV	CX
+	MOV	CH,AL		; cylinder low 8 bits (a floppy has < 256)
+	MOV	CL,0		; CL takes the sector number below
+
+	MOV	AX,DX		; head = (LBA mod (spt * heads)) / spt
+	XOR	DX,DX
+	MOV	BX,SECPTRK
+	DIV	BX
+
+	ADD	DL,1		; INT 13h sectors are 1-based
+	AND	DL,3FH		; ... and live in the low 6 bits of CL
+	OR	CL,DL
+
+	MOV	DH,AL		; head number
+	AND	DH,1		; two heads, so one bit
+	XOR	DL,DL		; drive 0
+
+	POP	BX
+	RET
+
+	END

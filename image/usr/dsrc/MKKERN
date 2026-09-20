@@ -1,0 +1,86 @@
+# MKKERN -- build the RealXV6 KERNEL from source ON RealXV6, in one shot,
+# and prove the result is the very image that booted it.  Driven by drun:
+#
+#     cd /src/sys ; drun mkkern
+#
+# The kernel keeps the shape it has in the source tree: KEN/ (machine-
+# independent), DMR/ (the PC half) and H/ (the headers).  What changes here
+# is only how the three are reached.  A DOS build can cd into KEN and DMR
+# and let DSINC find the headers; DSINC is dead here (V6MISC's _MSDOS2_ is
+# 0, so C88 never reaches findfile()), so
+# every step runs in /src/sys and spells the path instead: the source as
+# KEN/NAME or DMR/NAME, the headers as -iH/, which C88 prepends to the bare
+# <os.h> to make H/os.h.  Those directory names are UPPER for two different
+# reasons -- C88 upper-cases the source name when it chains to GEN, and the
+# .O ASM88 then creat()s under it gets no case fold, so a lower-case ken/
+# would simply not exist; while H/os.h is rescued by DCOMPAT's UPPER fold
+# only because the H is already upper.  See the /src comment in proto.
+#
+# The object list still lives in KERNL rather than UNIX.RSP, because BIND
+# wants forward slashes here and the .O files land next to their sources.
+# Link order is load-bearing: CPAD (code spacer, no DSEG), then DPAD (data
+# spacer, no CSEG), then M86, whose STARTX must land at code offset 100H.
+# The kernel pulls DeSmet's long-arithmetic helpers (_SHL4/_SHR4/_CMP4/
+# _SWITCH) out of CSTDIO.S, and BIND with _MSDOS2_=0 skips findfile() and
+# opens the bare name -- there is no PATH here to find C:\DESMET\LIB on --
+# so KERNL passes -L../rt/ to take it from /src/rt.
+#
+# The last two steps are the point.  e2c folds the two-segment .exe dbind
+# produced into the single-segment CS==DS==SS .COM the boot sector loads,
+# and dcmp checks it against /test/REFK.COM -- the host build of this same
+# kernel by this same (stage-2) toolchain, the one /bin is linked from AND
+# the one on the boot floppy.  IDENTICAL therefore means RealXV6 rebuilt the
+# kernel it is running, byte for byte, with no host tool anywhere in the
+# chain -- not merely reproduced a second build of the same source.
+#
+# Every step is strict (no leading '-'): the kernel compiles warning-free on
+# the host, so any C88 diagnostic here is a real regression and must stop the
+# run rather than surface later as a DIFFER.
+
+# --- ken: the machine-independent kernel ---
+c88 KEN/ALLOC -iH/
+c88 KEN/CLOCK -iH/
+c88 KEN/FIO -iH/
+c88 KEN/IGET -iH/
+c88 KEN/MAIN -iH/
+c88 KEN/MALLOC -iH/
+c88 KEN/NAMI -iH/
+c88 KEN/PIPE -iH/
+c88 KEN/PRF -iH/
+c88 KEN/RDWRI -iH/
+echo === KEN HALF ===
+c88 KEN/SIG -iH/
+c88 KEN/SLP -iH/
+c88 KEN/SUBR -iH/
+c88 KEN/SYS1 -iH/
+c88 KEN/SYS2 -iH/
+c88 KEN/SYS3 -iH/
+c88 KEN/SYS4 -iH/
+c88 KEN/SYSENT -iH/
+c88 KEN/TEXT -iH/
+c88 KEN/TRAP -iH/
+echo === KEN BUILT ===
+
+# --- dmr: the 8088/PC device half, plus the two linker spacers ---
+c88 DMR/BIO -iH/
+c88 DMR/FD -iH/
+c88 DMR/IDE -iH/
+c88 DMR/KBD -iH/
+c88 DMR/KL -iH/
+c88 DMR/MEM -iH/
+c88 DMR/PC -iH/
+c88 DMR/RK -iH/
+c88 DMR/TTY -iH/
+c88 DMR/UART -iH/
+c88 DMR/DPAD -iH/
+c88 DMR/DPAD2 -iH/
+asm88 DMR/M86
+asm88 DMR/CPAD
+asm88 DMR/ZEND
+echo === DMR BUILT ===
+
+# --- link, convert, and compare against the running kernel ---
+dbind -fKERNL
+e2c UNIX.EXE UNIX.COM UNIX.MAP
+dcmp UNIX.COM /test/REFK.COM
+echo === MKKERN KERNEL OK ===

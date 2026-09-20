@@ -6,7 +6,7 @@
 #     cd /src/rt ; drun mkrt        (once, for the runtime objects)
 #     cd /src/desmet ; drun mkall
 #
-# The running /bin/{c88,gen,asm88,dbind,dlib88,d2a} compile each component's
+# The running /bin/{c88,gen,asm88,dbind,dlib88,d2a,e2c,mkboot} compile each component's
 # own source, dbind links it with the freshly rebuilt runtime, d2a converts
 # the .exe to an a.out, and dcmp checks it against /bin -- IDENTICAL means
 # the compiler reproduced itself exactly.  /bin is the fixpoint toolchain
@@ -93,5 +93,19 @@ dbind -fD2AL
 d2a D2AV6.EXE d2a.new 1000
 dcmp d2a.new /bin/d2a
 rm D2A.O D2AV6.EXE d2a.new
+
+# --- e2c : the .exe -> .COM converter (the kernel image format) ---
+c88 E2C -i../rt/
+dbind -fE2CL
+d2a E2CV6.EXE e2c.new 1000
+dcmp e2c.new /bin/e2c
+rm E2C.O E2CV6.EXE e2c.new
+
+# --- mkboot : the .COM -> boot floppy assembler (the step after e2c) ---
+c88 MKBOOT -i../rt/
+dbind -fMKBOOTL
+d2a MKBOOTV6.EXE mkboot.new 1000
+dcmp mkboot.new /bin/mkboot
+rm MKBOOT.O MKBOOTV6.EXE mkboot.new
 
 echo === MKALL FIXPOINT OK ===

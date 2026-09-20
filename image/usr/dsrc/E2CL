@@ -1,0 +1,1 @@
+../rt/DCRT0.O E2C ../rt/SYSCALL.O ../rt/DCOMPAT.O ../rt/PRINTF.O -A -L../rt/ -OE2CV6

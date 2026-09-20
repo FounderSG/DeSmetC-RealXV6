@@ -1,0 +1,676 @@
+; M86.A -- DeSmet ASM88 port of the RealXV6 kernel's machine-level layer.
+; Translated from the MASM-flavoured original.  ASM88 has no .MODEL,
+; PROC/ENDP, MACRO/ENDM, @@ local labels or SEGMENT/GROUP, so the four
+; interrupt macros are expanded by hand and every local label is named.
+;
+; Calling convention (verified against C88 3.03 output):
+;   - C88 always emits PUSH BP / MOV BP,SP, so [BP+4] is the first argument
+;     and [BP+6] the second; arguments are pushed right to left.
+;   - the return value is left in AX.
+;   - a C symbol "foo" is spelled "foo_" (DeSmet appends the underscore;
+;     Watcom's leading-underscore "_foo" does not apply).
+;   - SI, DI, BP, DS and SS must come back unchanged; AX, BX, CX, DX, ES
+;     are scratch.
+;
+; Segments: the image is linked with the CPAD/DPAD spacers and folded into
+; a .COM by e2c, so at run time CS == DS == SS, exactly as under the
+; Watcom .COM build.  That is why "MOV AX,CS / MOV DS,AX" in the interrupt
+; entries keeps its original meaning.
+;
+; struct user is 1024 bytes and u_stack ends at its last byte (measured),
+; so the kernel stack top is OFFSET u_ + 1024, as in the original.
+
+	DSEG
+
+; Resume stack: a private 128-byte stack that resume() switches to before
+; it swaps the u-area out from under itself.  RB lands in BSS, which BIND
+; places after all initialized data; the top is reached by OFFSET+128.
+RESBOT:	RB	128
+
+; End of BSS, PATCHED by e2c with the "data=" total from the BIND -P map:
+; BIND publishes no end-of-BSS symbol and the .COM image does not carry
+; BSS at all, so the startup has to be told where to stop.  It must be
+; INITIALIZED (DW) so it lives in the image where the patch reaches.
+	PUBLIC	BSSEND_
+BSSEND_:DW	0
+
+; Start of BSS.  ZEND.A is linked last and contributes the final initialized
+; word, so BSS begins just above it -- known at link time, no patch needed.
+; (Deriving it from the size of the EXE's data region does not work: BIND
+; pads the image to a whole 512-byte page, which puts the boundary inside
+; the first BSS object and leaves the front of the u-area uncleared.)
+	PUBLIC	ENDDATA_
+
+; struct user u, defined by ken/main.c.  It has to be declared here, while
+; DSEG is the current segment: ASM88 types a symbol by the segment in
+; effect when it first sees it, so declaring this data symbol from inside
+; CSEG makes BIND reject every object that also defines it ("different
+; segments for U_").
+	PUBLIC	U_
+
+	CSEG
+
+; ---- entry point ---------------------------------------------------
+	PUBLIC	STARTX
+; ---- C functions this module calls ---------------------------------
+	PUBLIC	MAIN_
+	PUBLIC	ISR_SAVUAR_
+	PUBLIC	ISR_ROUTER_
+	PUBLIC	CHECK_RUNRUN_
+	PUBLIC	TRAP0_
+	PUBLIC	TRAP_
+; ---- routines the C side calls -------------------------------------
+	PUBLIC	CLOCK_ISR_
+	PUBLIC	IDE_ISR_
+	PUBLIC	KBD_ISR_
+	PUBLIC	UART_ISR_
+	PUBLIC	TRAP_ISR_
+	PUBLIC	GETPS_
+	PUBLIC	SETPS_
+	PUBLIC	SAVE_
+	PUBLIC	USE_RESUME_STACK_
+	PUBLIC	DO_RESUME_
+	PUBLIC	MOVE_TO_USER_MODE_
+	PUBLIC	BIOS_GETC_
+	PUBLIC	BIOS_PUTC_
+	PUBLIC	BIOS_DISKIO_
+	PUBLIC	BIOS_DISKPARM_
+	PUBLIC	BIOS_DISKRESET_
+	PUBLIC	PEEKB_
+	PUBLIC	PEEKW_
+	PUBLIC	POKEB_
+	PUBLIC	POKEW_
+	PUBLIC	FMEMCPY_
+	PUBLIC	FMEMSET_
+	PUBLIC	GETCS_
+	PUBLIC	GETDS_
+	PUBLIC	DISABLE_
+	PUBLIC	ENABLE_
+
+; =====================================================================
+; STARTX -- kernel entry.  Linked third (CPAD, DPAD, M86, ...) so that
+; with CPAD holding code offsets 0..0FFH this lands at 100H, where a .COM
+; image begins.  Sets up the segment registers and the kernel stack,
+; clears BSS, and calls main().
+; =====================================================================
+STARTX:
+	MOV	AX,CS
+	MOV	DS,AX
+	MOV	ES,AX
+	CLI
+	MOV	SS,AX
+	MOV	AX,OFFSET U_
+	ADD	AX,1020		; kernel stack top, just below u_stack's end
+	MOV	SP,AX
+	STI
+
+; clear BSS: [BSSBEG_, BSSEND_), both filled in by e2c.  Nothing is
+; on the stack yet, and REP STOSB uses none, so zeroing the region the
+; stack lives in is safe here.
+	MOV	DI,OFFSET ENDDATA_
+	ADD	DI,2
+	MOV	CX,WORD BSSEND_
+	SUB	CX,DI
+	SUB	AX,AX
+	CLD
+	REP	STOSB
+
+	CALL	MAIN_
+HANG:	JMP	HANG
+
+; =====================================================================
+; Interrupt entries.  Each records an IRQ index in DI and falls into the
+; common path.  The EnterISR sequence builds exactly the frame struct ctx
+; describes: DS at the lowest address, then ES DX CX BX AX DI SI BP, with
+; IP CS FLAGS above them from the interrupt itself.
+; =====================================================================
+CLOCK_ISR_:
+	PUSH	BP
+	PUSH	SI
+	PUSH	DI
+	PUSH	AX
+	PUSH	BX
+	PUSH	CX
+	PUSH	DX
+	PUSH	ES
+	PUSH	DS
+	MOV	AX,CS
+	MOV	DS,AX
+	SUB	DI,DI
+	JMP	COMISR
+
+IDE_ISR_:
+	PUSH	BP
+	PUSH	SI
+	PUSH	DI
+	PUSH	AX
+	PUSH	BX
+	PUSH	CX
+	PUSH	DX
+	PUSH	ES
+	PUSH	DS
+	MOV	AX,CS
+	MOV	DS,AX
+	MOV	AL,20H		; EOI to the slave PIC
+	OUT	0A0H,AL
+	MOV	DI,1
+	JMP	COMISR
+
+KBD_ISR_:
+	PUSH	BP
+	PUSH	SI
+	PUSH	DI
+	PUSH	AX
+	PUSH	BX
+	PUSH	CX
+	PUSH	DX
+	PUSH	ES
+	PUSH	DS
+	MOV	AX,CS
+	MOV	DS,AX
+	MOV	DI,2
+	JMP	COMISR
+
+UART_ISR_:
+	PUSH	BP
+	PUSH	SI
+	PUSH	DI
+	PUSH	AX
+	PUSH	BX
+	PUSH	CX
+	PUSH	DX
+	PUSH	ES
+	PUSH	DS
+	MOV	AX,CS
+	MOV	DS,AX
+	MOV	DI,3
+	JMP	COMISR
+
+; ---------------------------------------------------------------------
+; Common interrupt path.  SI = SS-CS: zero means the interrupt hit while
+; already on the kernel stack, non-zero means it came from user mode and
+; the u-area registers must be saved and the stack switched.  SI doubles
+; as the "came from user mode" flag passed to isr_router.
+; ---------------------------------------------------------------------
+COMISR:
+	MOV	AL,20H		; EOI to the master PIC
+	OUT	20H,AL
+	MOV	AX,CS
+	MOV	SI,SS
+	SUB	SI,AX
+	JZ	CISKERN		; SS == CS: already in kernel mode
+	CALL	ISR_SAVUAR_
+; SwitchToKernelStack
+	MOV	CX,SP
+	MOV	DX,SS
+	MOV	AX,CS
+	MOV	SS,AX
+	MOV	AX,OFFSET U_
+	ADD	AX,1024
+	MOV	SP,AX
+	PUSH	DX		; caller's SS
+	PUSH	CX		; caller's SP
+CISKERN:
+	PUSH	SI		; isr_router(irq, mode): mode pushed first
+	PUSH	DI		; ... so irq lands at [BP+4]
+	CALL	ISR_ROUTER_
+	POP	DI
+	POP	SI
+	OR	SI,SI
+	JZ	CISDONE		; stayed on the kernel stack: nothing to undo
+	CALL	CHECK_RUNRUN_
+; SwitchToUserStack
+	CLI
+	POP	CX
+	POP	DX
+	MOV	SP,CX
+	MOV	SS,DX
+CISDONE:
+	POP	DS
+	POP	ES
+	POP	DX
+	POP	CX
+	POP	BX
+	POP	AX
+	POP	DI
+	POP	SI
+	POP	BP
+	IRET
+
+; =====================================================================
+; TRAP_ISR -- the system call gate (INT 81H).  trap0 reads the pushed
+; register frame as its arguments, which is why the EnterISR order and
+; struct ctx have to agree.
+; =====================================================================
+TRAP_ISR_:
+	PUSH	BP
+	PUSH	SI
+	PUSH	DI
+	PUSH	AX
+	PUSH	BX
+	PUSH	CX
+	PUSH	DX
+	PUSH	ES
+	PUSH	DS
+	MOV	AX,CS
+	MOV	DS,AX
+	CALL	TRAP0_
+; SwitchToKernelStack
+	MOV	CX,SP
+	MOV	DX,SS
+	MOV	AX,CS
+	MOV	SS,AX
+	MOV	AX,OFFSET U_
+	ADD	AX,1024
+	MOV	SP,AX
+	PUSH	DX
+	PUSH	CX
+	STI
+	CALL	TRAP_
+	CALL	CHECK_RUNRUN_
+; SwitchToUserStack
+	CLI
+	POP	CX
+	POP	DX
+	MOV	SP,CX
+	MOV	SS,DX
+	POP	DS
+	POP	ES
+	POP	DX
+	POP	CX
+	POP	BX
+	POP	AX
+	POP	DI
+	POP	SI
+	POP	BP
+	IRET
+
+; =====================================================================
+; DBGCH -- DEBUG: emit AL on COM1, polled.  Needs no DS and no kernel
+; stack, so it can be called from an interrupt entry before any of the
+; kernel environment has been re-established.  Preserves AX.
+; =====================================================================
+; dbgch(c) -- C-callable wrapper, far lighter than printf (no recursion,
+; no BIOS call), so it can be sprinkled anywhere without perturbing the
+; kernel stack or the timing.
+	PUBLIC	DBGCH_
+DBGCH_:	PUSH	BP
+	MOV	BP,SP
+	MOV	AL,BYTE [BP+4]
+	CALL	DBGCH
+	POP	BP
+	RET
+
+DBGCH:	PUSH	AX
+	PUSH	DX
+	MOV	AH,AL
+DBGCHW:	MOV	DX,3FDH		; line status register
+	IN	AL,DX
+	TEST	AL,20H		; transmit holding register empty?
+	JZ	DBGCHW
+	MOV	DX,3F8H
+	MOV	AL,AH
+	OUT	DX,AL
+	POP	DX
+	POP	AX
+	RET
+
+; =====================================================================
+; int getps() / setps(int) -- the processor status word.  Only the
+; interrupt-enable bit is honoured.
+; =====================================================================
+GETPS_:	PUSHF
+	POP	AX
+	RET
+
+SETPS_:	PUSH	BP
+	MOV	BP,SP
+	MOV	AX,WORD [BP+4]
+	POP	BP
+	AND	AX,0200H
+	JZ	SETPSD
+	STI
+	RET
+SETPSD:	CLI
+	RET
+
+; =====================================================================
+; int save(label_t ctx) -- V7-style setjmp.  Returns 0 when called
+; directly and 1 when resumed through do_resume: the AX slot in the saved
+; frame is written as 1 before the frame is copied out.
+; label_t is int[14]: ds es dx cx bx ax di si bp ip cs flags ss sp
+; =====================================================================
+SAVE_:	PUSH	BP
+	MOV	BP,SP
+	PUSH	SI
+	PUSH	DI
+	MOV	AX,1		; the value save() returns when resumed
+	PUSH	AX
+	PUSH	BX
+	PUSH	CX
+	PUSH	DX
+	PUSH	ES
+	PUSH	DS
+	MOV	AX,DS
+	MOV	ES,AX
+	MOV	DI,WORD [BP+4]
+	MOV	SI,SP
+	MOV	CX,10
+	CLD
+REP	MOVSW
+	MOV	BX,WORD [BP+4]
+	MOV	WORD [BX+20],CS
+	PUSHF
+	POP	AX
+	MOV	WORD [BX+22],AX
+	MOV	WORD [BX+24],SS
+	MOV	AX,BP
+	ADD	AX,4
+	MOV	WORD [BX+26],AX
+	POP	DS
+	POP	ES
+	POP	DX
+	POP	CX
+	POP	BX
+	POP	AX
+	POP	DI
+	POP	SI
+	POP	BP
+	SUB	AX,AX		; direct call returns 0
+	RET
+
+; =====================================================================
+; use_resume_stack() -- move onto the private resume stack, carrying the
+; return address across, so resume() can swap the u-area (and with it the
+; stack it was running on) safely.
+; =====================================================================
+USE_RESUME_STACK_:
+	CLI
+	POP	AX		; return address
+	MOV	SP,OFFSET RESBOT+128
+;
+; BP has to move with SP.  C88 cleans up after every argument-passing call
+; with "MOV SP,BP", not with an ADD as Watcom does, so leaving BP pointing
+; at resume()'s old frame makes the very next call -- savu() -- restore SP
+; back into the u-area stack this routine just left.  retu() then overwrites
+; u, and with it the stack it is running on.  That was the crash.
+;
+; Safe to clobber: after this returns, resume() touches only globals
+; (resume_proc/resume_ctx exist precisely so it needn't touch its frame),
+; and it never returns -- do_resume leaves through an IRET.
+;
+	MOV	BP,SP
+	PUSH	AX
+	RET
+
+; =====================================================================
+; do_resume(label_t ctx) -- longjmp: rebuild the saved frame on the
+; target stack and IRET into it.  Never returns.
+; =====================================================================
+DO_RESUME_:
+	POP	BX		; discard return address
+	POP	BX		; BX = ctx
+	MOV	ES,WORD [BX+24]	; ES = ctx->ss
+	MOV	DI,WORD [BX+26]	; DI = ctx->sp
+	SUB	DI,24
+	MOV	SI,BX
+	MOV	CX,12
+	CLD
+REP	MOVSW			; copy the saved registers onto that stack
+	MOV	AX,ES
+	MOV	SS,AX
+	SUB	DI,24
+	MOV	SP,DI
+	POP	DS
+	POP	ES
+	POP	DX
+	POP	CX
+	POP	BX
+	POP	AX
+	POP	DI
+	POP	SI
+	POP	BP
+	IRET
+
+; =====================================================================
+; move_to_user_mode(uint seg, uint sp) -- never returns.  seg is the user
+; data segment (and CS too for the single-segment icode bootstrap); user
+; code starts at offset 100H.  No PUSH BP here, so the first argument is
+; at [BP+2].
+; =====================================================================
+MOVE_TO_USER_MODE_:
+	MOV	BP,SP
+	MOV	DX,WORD [BP+2]
+	MOV	AX,WORD [BP+4]
+	CLI
+	MOV	SS,DX
+	MOV	SP,AX
+	STI
+	MOV	DS,DX
+	MOV	ES,DX
+	PUSH	DX
+	MOV	AX,0100H
+	PUSH	AX
+	LRET			; ASM88 spells the far return LRET, not RETF
+
+; =====================================================================
+; BIOS console
+; =====================================================================
+; int bios_getc() -- -1 when no key is waiting
+BIOS_GETC_:
+	MOV	AH,1
+	INT	16H
+	JNZ	BGREADY
+	MOV	AX,0FFFFH
+	RET
+BGREADY:
+	MOV	AH,0
+	INT	16H
+	MOV	AH,0
+	RET
+
+; bios_putc(char c) -- teletype output
+BIOS_PUTC_:
+	PUSH	BP
+	MOV	BP,SP
+	MOV	AL,BYTE [BP+4]
+	MOV	AH,0EH
+	MOV	BH,0
+	INT	10H
+	POP	BP
+	RET
+
+; =====================================================================
+; BIOS disk services, for the floppy driver in fd.c.  ES:BX is why these
+; are here: DeSmet C has no far pointer to hold a transfer address and no
+; way to load a segment register, so the C side passes the two halves and
+; this puts them where INT 13H wants them.  SI and DI are saved because
+; C88 keeps register variables in them and the BIOS is not asked to.
+; =====================================================================
+; int bios_diskio(cmd, drive, cyl, head, sec, nsec, seg, off)
+; cmd is the INT 13H function -- 2 read, 3 write.  Returns 0, or the BIOS
+; status byte out of AH when the call fails.
+BIOS_DISKIO_:
+	PUSH	BP
+	MOV	BP,SP
+	PUSH	ES
+	PUSH	DS
+	PUSH	SI
+	PUSH	DI
+	MOV	AX,WORD [BP+16]
+	MOV	ES,AX
+	MOV	BX,WORD [BP+18]
+	MOV	CH,BYTE [BP+8]		; cylinder, low 8 bits: a floppy stops well
+	MOV	CL,BYTE [BP+12]		; short of the 2 more bits CL would carry
+	MOV	DH,BYTE [BP+10]
+	MOV	DL,BYTE [BP+6]
+	MOV	AH,BYTE [BP+4]
+	MOV	AL,BYTE [BP+14]
+	INT	13H
+	POP	DI
+	POP	SI
+	POP	DS
+	JC	BDIOERR
+	SUB	AX,AX
+	POP	ES
+	POP	BP
+	RET
+BDIOERR:
+	MOV	AL,AH			; status byte, zero extended
+	SUB	AH,AH
+	OR	AX,AX			; carry set but no status is still a
+	JNZ	BDIORET			; failure, so do not report success
+	MOV	AX,0FFFFH
+BDIORET:
+	POP	ES
+	POP	BP
+	RET
+
+; int bios_diskparm(drive, res) -- INT 13H AH=08H, drive parameters.
+; Returns -1 if the BIOS declines, otherwise stores CX in res[0] and DX in
+; res[1] and returns 0.  res is a plain DS offset (small model).  The call
+; hands back a drive parameter table in ES:DI, and is trusted with DS no
+; further than the rest.
+BIOS_DISKPARM_:
+	PUSH	BP
+	MOV	BP,SP
+	PUSH	ES
+	PUSH	DS
+	PUSH	SI
+	PUSH	DI
+	MOV	DL,BYTE [BP+4]
+	MOV	AH,8
+	INT	13H
+	POP	DI
+	POP	SI
+	POP	DS
+	JC	BDPERR
+	MOV	BX,WORD [BP+6]
+	MOV	WORD [BX],CX
+	ADD	BX,2
+	MOV	WORD [BX],DX
+	SUB	AX,AX
+	JMP	BDPRET
+BDPERR:
+	MOV	AX,0FFFFH
+BDPRET:
+	POP	ES
+	POP	BP
+	RET
+
+; bios_diskreset(drive) -- INT 13H AH=00H.  Also clears a latched media
+; change, which is the whole reason fd.c calls it between retries.
+BIOS_DISKRESET_:
+	PUSH	BP
+	MOV	BP,SP
+	PUSH	SI
+	PUSH	DI
+	SUB	AH,AH
+	MOV	DL,BYTE [BP+4]
+	INT	13H
+	POP	DI
+	POP	SI
+	POP	BP
+	RET
+
+; =====================================================================
+; Off-segment access.  DeSmet C has no far pointers, so the C side passes
+; (segment, offset) pairs and these do the loading.
+; =====================================================================
+; int peekb(seg, off) -- unsigned byte at seg:off
+PEEKB_:	PUSH	BP
+	MOV	BP,SP
+	MOV	ES,WORD [BP+4]
+	MOV	BX,WORD [BP+6]
+	SUB	AX,AX
+	MOV	AL,BYTE ES:[BX]
+	POP	BP
+	RET
+
+; int peekw(seg, off) -- word at seg:off
+PEEKW_:	PUSH	BP
+	MOV	BP,SP
+	MOV	ES,WORD [BP+4]
+	MOV	BX,WORD [BP+6]
+	MOV	AX,WORD ES:[BX]
+	POP	BP
+	RET
+
+; pokeb(seg, off, val)
+POKEB_:	PUSH	BP
+	MOV	BP,SP
+	MOV	ES,WORD [BP+4]
+	MOV	BX,WORD [BP+6]
+	MOV	AX,WORD [BP+8]
+	MOV	BYTE ES:[BX],AL
+	POP	BP
+	RET
+
+; pokew(seg, off, val)
+POKEW_:	PUSH	BP
+	MOV	BP,SP
+	MOV	ES,WORD [BP+4]
+	MOV	BX,WORD [BP+6]
+	MOV	AX,WORD [BP+8]
+	MOV	WORD ES:[BX],AX
+	POP	BP
+	RET
+
+; fmemcpy(dseg, doff, sseg, soff, n) -- replaces the far-pointer memcpy.
+; Byte at a time: callers include odd-length u-area and frame copies.
+FMEMCPY_:
+	PUSH	BP
+	MOV	BP,SP
+	PUSH	SI
+	PUSH	DI
+	PUSH	DS
+	MOV	ES,WORD [BP+4]
+	MOV	DI,WORD [BP+6]
+	MOV	SI,WORD [BP+10]
+	MOV	CX,WORD [BP+12]
+	MOV	AX,WORD [BP+8]
+	MOV	DS,AX
+	CLD
+REP	MOVSB
+	POP	DS
+	POP	DI
+	POP	SI
+	POP	BP
+	RET
+
+; fmemset(seg, off, c, n)
+FMEMSET_:
+	PUSH	BP
+	MOV	BP,SP
+	PUSH	DI
+	MOV	ES,WORD [BP+4]
+	MOV	DI,WORD [BP+6]
+	MOV	AX,WORD [BP+8]
+	MOV	CX,WORD [BP+10]
+	CLD
+REP	STOSB
+	POP	DI
+	POP	BP
+	RET
+
+; uint getcs() / uint getds().  Equal under the .COM layout; kept separate
+; because the C side distinguishes core_cs (interrupt vectors) from
+; core_ds (data offsets).
+GETCS_:	MOV	AX,CS
+	RET
+
+GETDS_:	MOV	AX,DS
+	RET
+
+; disable() / enable() -- were { _asm cli } macros under Watcom.  DeSmet's
+; inline assembly is the #asm block form, which a macro cannot expand to,
+; so they are real calls.
+DISABLE_:
+	CLI
+	RET
+
+ENABLE_:
+	STI
+	RET
+
+	END

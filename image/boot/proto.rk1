@@ -1,0 +1,225 @@
+: proto.rk1 -- the on-target source tree, on its OWN filesystem.  Written
+: rather than arrived at, like proto: every source the target can rebuild
+: is named below, and nothing is withheld from it.
+:
+: The rk driver maps unit N to block N*NRKBLK (4872) of the one IDE disk,
+: so this is unix.img at offset 4872 and needs no second file.  It moved
+: off rk0 because /src is 1814 blocks and rk0 had 607 left -- too few for
+: the on-target floppy build, which writes a 720-block image.  Mount it with
+:     mount /dev/rk1 /src
+: rk0 keeps an empty /src as the mount point.
+:
+: /src/sys/BOOT.COM is not carried either: $KBIN is what MKKBIN builds on
+: the reader's DOS -- the kernel, the boot sector, the layout golden -- the
+: way $BIN is what MKBIN builds.
+:
+: No boot sector ('-'): nothing here is booted, and neither is rk0.
+: fsize 4800 + swap 0 fits the 4872 blocks the driver gives one unit;
+: swap stays on rk0, where the kernel's swplo=4000/nswap=872 puts it.
+-
+4800 100 0
+d--777 0 0
+: /src -- ALL source that can be rebuilt on the target, in four directories:
+:
+:   rt/      the V6 runtime, built ONCE and shared (mkrt).  desmet/ and usr/
+:            link it as ../rt/NAME with -L../rt/ for CSTDIO.S; sys/ takes
+:            only the library, for the long-arithmetic helpers.
+:   desmet/  the DeSmet toolchain itself + the three image tools (mkall)
+:   sys/     the RealXV6 kernel, in its own KEN/ DMR/ H/ split (mkkern),
+:            then the boot floppy that carries it (mkimg)
+:   usr/     the DeSmet-built user programs (mkusr)
+:
+: The bulky sources are read straight from where they are developed, via the
+: $BUILD / $RT / $KERNEL tokens, so nothing is duplicated into the tracked
+: image tree; only the build scripts and BIND response files live under
+: image/usr/dsrc.
+:
+: C88's include search is dead here (V6MISC's _MSDOS2_ is 0, so findfile()
+: never runs and C88 just open()s the name it was handed, which DCOMPAT
+: resolves case-blind), so anything outside the cwd is reached by spelling
+: the path: C88's -i prefix for headers (options come AFTER the file name),
+: a path'd source name for a compile, and BIND's -L / an explicit .O for a
+: link.  That is enough to keep sys/ split the way drive_c\XV6\KERNEL is --
+: mkkern runs in sys/ and compiles KEN/NAME and DMR/NAME with -iH/, since
+: no cwd would make C88 find H/ by itself.  Case is what fixes the spelling
+: of these directories:
+:   - KEN/ DMR/ H/ are UPPER, because C88 upper-cases the source name when
+:     it chains to GEN (C88.C: nextpgm[nopt++]=toupper(*cur++)), and the .O
+:     that ASM88 then creat()s under that name gets no case fold at all --
+:     creat() is a bare syscall in DCOMPAT.C.  A lower-case ken/ would be
+:     compiled from and written to a directory that does not exist.
+:   - <os.h> stays lower-case in the source, so -iH/ makes "H/os.h" and
+:     DCOMPAT's UPPER fold turns the whole path into H/OS.H -- which works
+:     only because the H is already upper.
+:   - rt/ is lower-case for the mirror-image reason: every source spells it
+:     "UNIX.H" in UPPER, so ../rt/UNIX.H hits VERBATIM and the fold never
+:     runs -- it could not help there, since foldcase() rewrites the whole
+:     path and would turn ../rt/ into ../RT/.
+rt      d--777 0 0
+        UNIX.H      ---644 0 0 $RT/UNIX.H
+        CRT0.A      ---644 0 0 $RT/CRT0.A
+        DCRT0.A     ---644 0 0 $RT/DCRT0.A
+        V6MISC.A    ---644 0 0 $RT/V6MISC.A
+        SETEXIT.A   ---644 0 0 $RT/SETEXIT.A
+        SYSCALL.C   ---644 0 0 $RT/SYSCALL.C
+        USTR.C      ---644 0 0 $RT/USTR.C
+        PRINTF.C    ---644 0 0 $RT/PRINTF.C
+        DCOMPAT.C   ---644 0 0 $RT/DCOMPAT.C
+        V6DOS.C     ---644 0 0 $RT/V6DOS.C
+        V6CHAIN.C   ---644 0 0 $RT/V6CHAIN.C
+        ULIB.C      ---644 0 0 $RT/ULIB.C
+        UCOMPAT.C   ---644 0 0 $RT/UCOMPAT.C
+        CTIME.C     ---644 0 0 $RT/CTIME.C
+        CSTDIO.S    ---644 0 0 ../../drive_c/DESMET/LIB/CSTDIO.S
+        mkrt        ---644 0 0 ../usr/dsrc/MKRT
+        $
+desmet  d--777 0 0
+        mkall       ---644 0 0 ../usr/dsrc/MKALL
+        GENL        ---644 0 0 ../usr/dsrc/GENL
+        C88L        ---644 0 0 ../usr/dsrc/C88L
+        ASML        ---644 0 0 ../usr/dsrc/ASML
+        BINDL       ---644 0 0 ../usr/dsrc/BINDL
+        LIBL        ---644 0 0 ../usr/dsrc/LIBL
+        D2AL        ---644 0 0 ../usr/dsrc/D2AL
+        E2CL        ---644 0 0 ../usr/dsrc/E2CL
+        MKBOOTL     ---644 0 0 ../usr/dsrc/MKBOOTL
+        OBJ.H       ---644 0 0 $BUILD/C88/OBJ.H
+        NODES.H     ---644 0 0 $BUILD/C88/NODES.H
+        PASS1.H     ---644 0 0 $BUILD/C88/PASS1.H
+        PASS2.H     ---644 0 0 $BUILD/GEN/PASS2.H
+        INST86.H    ---644 0 0 $BUILD/GEN/INST86.H
+        ASM88.H     ---644 0 0 $BUILD/ASM/ASM88.H
+        GEN.C       ---644 0 0 $BUILD/GEN/GEN.C
+        GEN2.C      ---644 0 0 $BUILD/GEN/GEN2.C
+        GEN3.C      ---644 0 0 $BUILD/GEN/GEN3.C
+        GEN4.C      ---644 0 0 $BUILD/GEN/GEN4.C
+        GEN5.C      ---644 0 0 $BUILD/GEN/GEN5.C
+        GEN6.C      ---644 0 0 $BUILD/GEN/GEN6.C
+        C88.C       ---644 0 0 $BUILD/C88/C88.C
+        C2.C        ---644 0 0 $BUILD/C88/C2.C
+        C3.C        ---644 0 0 $BUILD/C88/C3.C
+        C4.C        ---644 0 0 $BUILD/C88/C4.C
+        C5.C        ---644 0 0 $BUILD/C88/C5.C
+        C6.C        ---644 0 0 $BUILD/C88/C6.C
+        C7.C        ---644 0 0 $BUILD/C88/C7.C
+        ASM88.C     ---644 0 0 $BUILD/ASM/ASM88.C
+        ASM2.C      ---644 0 0 $BUILD/ASM/ASM2.C
+        ASM3.C      ---644 0 0 $BUILD/ASM/ASM3.C
+        ASM4.C      ---644 0 0 $BUILD/ASM/ASM4.C
+        ASM5.C      ---644 0 0 $BUILD/ASM/ASM5.C
+        BIND.C      ---644 0 0 $BUILD/BIND/BIND.C
+        LIB88.C     ---644 0 0 $BUILD/LIB88/LIB88.C
+        D2A.C       ---644 0 0 $RT/D2A.C
+        E2C.C       ---644 0 0 $RT/E2C.C
+        MKBOOT.C    ---644 0 0 $RT/MKBOOT.C
+        $
+sys     d--777 0 0
+        mkkern      ---644 0 0 ../usr/dsrc/MKKERN
+        KERNL       ---644 0 0 ../usr/dsrc/KERNL
+        BOOTL       ---644 0 0 ../usr/dsrc/BOOTL
+        mkimg       ---644 0 0 ../usr/dsrc/MKIMG
+        selfboot    ---644 0 0 ../usr/dsrc/SELFBOOT
+        banner.ed   ---644 0 0 ../usr/dsrc/BANNER.ED
+        BOOT.COM    ---644 0 0 $KBIN/BOOT.COM
+        BOOT    d--777 0 0
+                BOOTSEC.A   ---644 0 0 $KERNEL/BOOT/BOOTSEC.A
+                $
+        KEN     d--777 0 0
+                ALLOC.C     ---644 0 0 $KERNEL/KEN/ALLOC.C
+                CLOCK.C     ---644 0 0 $KERNEL/KEN/CLOCK.C
+                FIO.C       ---644 0 0 $KERNEL/KEN/FIO.C
+                IGET.C      ---644 0 0 $KERNEL/KEN/IGET.C
+                MAIN.C      ---644 0 0 $KERNEL/KEN/MAIN.C
+                MALLOC.C    ---644 0 0 $KERNEL/KEN/MALLOC.C
+                NAMI.C      ---644 0 0 $KERNEL/KEN/NAMI.C
+                PIPE.C      ---644 0 0 $KERNEL/KEN/PIPE.C
+                PRF.C       ---644 0 0 $KERNEL/KEN/PRF.C
+                RDWRI.C     ---644 0 0 $KERNEL/KEN/RDWRI.C
+                SIG.C       ---644 0 0 $KERNEL/KEN/SIG.C
+                SLP.C       ---644 0 0 $KERNEL/KEN/SLP.C
+                SUBR.C      ---644 0 0 $KERNEL/KEN/SUBR.C
+                SYS1.C      ---644 0 0 $KERNEL/KEN/SYS1.C
+                SYS2.C      ---644 0 0 $KERNEL/KEN/SYS2.C
+                SYS3.C      ---644 0 0 $KERNEL/KEN/SYS3.C
+                SYS4.C      ---644 0 0 $KERNEL/KEN/SYS4.C
+                SYSENT.C    ---644 0 0 $KERNEL/KEN/SYSENT.C
+                TEXT.C      ---644 0 0 $KERNEL/KEN/TEXT.C
+                TRAP.C      ---644 0 0 $KERNEL/KEN/TRAP.C
+                $
+        DMR     d--777 0 0
+                BIO.C       ---644 0 0 $KERNEL/DMR/BIO.C
+                FD.C        ---644 0 0 $KERNEL/DMR/FD.C
+                IDE.C       ---644 0 0 $KERNEL/DMR/IDE.C
+                KBD.C       ---644 0 0 $KERNEL/DMR/KBD.C
+                KL.C        ---644 0 0 $KERNEL/DMR/KL.C
+                MEM.C       ---644 0 0 $KERNEL/DMR/MEM.C
+                PC.C        ---644 0 0 $KERNEL/DMR/PC.C
+                RK.C        ---644 0 0 $KERNEL/DMR/RK.C
+                TTY.C       ---644 0 0 $KERNEL/DMR/TTY.C
+                UART.C      ---644 0 0 $KERNEL/DMR/UART.C
+                DPAD.C      ---644 0 0 $KERNEL/DMR/DPAD.C
+                DPAD2.C     ---644 0 0 $KERNEL/DMR/DPAD2.C
+                M86.A       ---644 0 0 $KERNEL/DMR/M86.A
+                CPAD.A      ---644 0 0 $KERNEL/DMR/CPAD.A
+                ZEND.A      ---644 0 0 $KERNEL/DMR/ZEND.A
+                $
+        H       d--777 0 0
+                BUF.H       ---644 0 0 $KERNEL/H/BUF.H
+                CONF.H      ---644 0 0 $KERNEL/H/CONF.H
+                EXEC.H      ---644 0 0 $KERNEL/H/EXEC.H
+                FILE.H      ---644 0 0 $KERNEL/H/FILE.H
+                FILSYS.H    ---644 0 0 $KERNEL/H/FILSYS.H
+                INO.H       ---644 0 0 $KERNEL/H/INO.H
+                INODE.H     ---644 0 0 $KERNEL/H/INODE.H
+                OS.H        ---644 0 0 $KERNEL/H/OS.H
+                PARAM.H     ---644 0 0 $KERNEL/H/PARAM.H
+                PC.H        ---644 0 0 $KERNEL/H/PC.H
+                PROC.H      ---644 0 0 $KERNEL/H/PROC.H
+                REG.H       ---644 0 0 $KERNEL/H/REG.H
+                SYSTM.H     ---644 0 0 $KERNEL/H/SYSTM.H
+                TEXT.H      ---644 0 0 $KERNEL/H/TEXT.H
+                TTY.H       ---644 0 0 $KERNEL/H/TTY.H
+                USER.H      ---644 0 0 $KERNEL/H/USER.H
+                $
+        $
+usr     d--777 0 0
+        mkusr       ---644 0 0 ../usr/dsrc/MKUSR
+        INIT.C      ---644 0 0 ../../drive_c/XV6/USR/INIT.C
+        CAT.C       ---644 0 0 ../../drive_c/XV6/USR/CAT.C
+        CHMOD.C     ---644 0 0 ../../drive_c/XV6/USR/CHMOD.C
+        CP.C        ---644 0 0 ../../drive_c/XV6/USR/CP.C
+        DATE.C      ---644 0 0 ../../drive_c/XV6/USR/DATE.C
+        ECHO.C      ---644 0 0 ../../drive_c/XV6/USR/ECHO.C
+        ED.C        ---644 0 0 ../../drive_c/XV6/USR/ED.C
+        FIB.C       ---644 0 0 ../../drive_c/XV6/USR/FIB.C
+        FORKTEST.C  ---644 0 0 ../../drive_c/XV6/USR/FORKTEST.C
+        GREP.C      ---644 0 0 ../../drive_c/XV6/USR/GREP.C
+        ID.C        ---644 0 0 ../../drive_c/XV6/USR/ID.C
+        KILL.C      ---644 0 0 ../../drive_c/XV6/USR/KILL.C
+        LN.C        ---644 0 0 ../../drive_c/XV6/USR/LN.C
+        LOGIN.C     ---644 0 0 ../../drive_c/XV6/USR/LOGIN.C
+        LS.C        ---644 0 0 ../../drive_c/XV6/USR/LS.C
+        MKDIR.C     ---644 0 0 ../../drive_c/XV6/USR/MKDIR.C
+        MKFS.C      ---644 0 0 ../../drive_c/XV6/USR/MKFS.C
+        MKNOD.C     ---644 0 0 ../../drive_c/XV6/USR/MKNOD.C
+        MORE.C      ---644 0 0 ../../drive_c/XV6/USR/MORE.C
+        MOUNT.C     ---644 0 0 ../../drive_c/XV6/USR/MOUNT.C
+        NICE.C      ---644 0 0 ../../drive_c/XV6/USR/NICE.C
+        PS.C        ---644 0 0 ../../drive_c/XV6/USR/PS.C
+        PWD.C       ---644 0 0 ../../drive_c/XV6/USR/PWD.C
+        RM.C        ---644 0 0 ../../drive_c/XV6/USR/RM.C
+        SH.C        ---644 0 0 ../../drive_c/XV6/USR/SH.C
+        SIGTEST.C   ---644 0 0 ../../drive_c/XV6/USR/SIGTEST.C
+        SLEEP.C     ---644 0 0 ../../drive_c/XV6/USR/SLEEP.C
+        STTY.C      ---644 0 0 ../../drive_c/XV6/USR/STTY.C
+        SYNC.C      ---644 0 0 ../../drive_c/XV6/USR/SYNC.C
+        UMOUNT.C    ---644 0 0 ../../drive_c/XV6/USR/UMOUNT.C
+        WC.C        ---644 0 0 ../../drive_c/XV6/USR/WC.C
+        DCMP.C      ---644 0 0 $RT/DCMP.C
+        DRUN.C      ---644 0 0 $RT/DRUN.C
+        REBOOT.C    ---644 0 0 $RT/REBOOT.C
+        FDTEST.C    ---644 0 0 $RT/FDTEST.C
+        HELLO.C     ---644 0 0 ../../drive_c/XCC/HELLO.C
+        ZOMBIE.C    ---644 0 0 ../../drive_c/XV6/USR/ZOMBIE.C
+        $
+$

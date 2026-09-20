@@ -1,0 +1,373 @@
+Unix Ready.
+init: starting sh
+# /bin/mount /dev/rk1 /src
+# cd /src/rt
+# drun mkrt
++ asm88 CRT0
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        0038 code   000C data   1% utilization+ asm88 DCRT0
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        003B code   000C data   1% utilization+ asm88 V6MISC
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        0006 code   0003 data   1% utilization+ asm88 SETEXIT
+ASM88   8088 Assembler    V1.5    (c) Mark DeSmet, 1982-86
+end of ASM88        001B code   0006 data   1% utilization+ c88 SYSCALL
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0338H code   0002H data        10% Utilization    + c88 USTR
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00F8H code   0000H data        3% Utilization    + c88 PRINTF
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     044CH code   0031H data        8% Utilization    + c88 DCOMPAT
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0139H code   0000H data        4% Utilization    + c88 V6DOS
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0269H code   001BH data        8% Utilization    + c88 V6CHAIN
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0136H code   0017H data        6% Utilization    + c88 ULIB
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     06B0H code   42A5H data        16% Utilization    + c88 UCOMPAT
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00CFH code   0000H data        5% Utilization    + c88 CTIME
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0510H code   00B1H data        7% Utilization    + echo === RT BUILT ===
+=== RT BUILT ===
+=== DRUN DONE ===
+# cd /src/usr
+# drun mkusr
++ c88 INIT -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00F9H code   0085H data        8% Utilization    + dbind ../rt/CRT0.O INIT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OINIT
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a INIT.EXE init.new 1000
+d2a: INIT.EXE -> init.new text=5632 data=1024 bss=16416 stack=4096 entry=2
++ dcmp init.new /init
+IDENTICAL (6672 bytes)
++ rm INIT.O INIT.EXE init.new
++ c88 CAT -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00D4H code   0238H data        6% Utilization    + dbind ../rt/CRT0.O CAT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OCAT
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a CAT.EXE cat.new 1000
+d2a: CAT.EXE -> cat.new text=5632 data=1024 bss=16851 stack=4096 entry=2
++ dcmp cat.new /bin/cat
+IDENTICAL (6672 bytes)
++ rm CAT.O CAT.EXE cat.new
++ c88 CHMOD -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00CCH code   0015H data        5% Utilization    + dbind ../rt/CRT0.O CHMOD ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OCHMOD
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a CHMOD.EXE chmod.new 1000
+d2a: CHMOD.EXE -> chmod.new text=5632 data=1024 bss=16304 stack=4096 entry=2
++ dcmp chmod.new /bin/chmod
+IDENTICAL (6672 bytes)
++ rm CHMOD.O CHMOD.EXE chmod.new
++ c88 CP -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     01E9H code   027DH data        10% Utilization    + dbind ../rt/CRT0.O CP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OCP
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a CP.EXE cp.new 1000
+d2a: CP.EXE -> cp.new text=6144 data=1024 bss=16920 stack=4096 entry=2
++ dcmp cp.new /bin/cp
+IDENTICAL (7184 bytes)
++ rm CP.O CP.EXE cp.new
++ c88 DATE -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     001FH code   0004H data        4% Utilization    + dbind ../rt/CRT0.O DATE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ODATE
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a DATE.EXE date.new 1000
+d2a: DATE.EXE -> date.new text=5632 data=1024 bss=16287 stack=4096 entry=2
++ dcmp date.new /bin/date
+IDENTICAL (6672 bytes)
++ rm DATE.O DATE.EXE date.new
++ c88 ECHO -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0049H code   0009H data        4% Utilization    + dbind ../rt/CRT0.O ECHO ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OECHO
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a ECHO.EXE echo.new 1000
+d2a: ECHO.EXE -> echo.new text=5632 data=1024 bss=16292 stack=4096 entry=2
++ dcmp echo.new /bin/echo
+IDENTICAL (6672 bytes)
++ rm ECHO.O ECHO.EXE echo.new
++ c88 ED -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     1A7AH code   2B03H data        35% Utilization    + dbind ../rt/CRT0.O ED ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OED
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a ED.EXE ed.new 1000
+d2a: ED.EXE -> ed.new text=12288 data=1024 bss=27294 stack=4096 entry=2
++ dcmp ed.new /bin/ed
+IDENTICAL (13328 bytes)
++ rm ED.O ED.EXE ed.new
++ c88 FIB -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     02F6H code   0107H data        8% Utilization    + dbind ../rt/CRT0.O FIB ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OFIB
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a FIB.EXE fib.new 1000
+d2a: FIB.EXE -> fib.new text=6144 data=1536 bss=16034 stack=4096 entry=2
++ dcmp fib.new /bin/fib
+IDENTICAL (7696 bytes)
++ rm FIB.O FIB.EXE fib.new
++ c88 FORKTEST -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0121H code   00E7H data        7% Utilization    + dbind ../rt/CRT0.O FORKTEST ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OFORKTEST
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a FORKTEST.EXE forktest.new 1000
+d2a: FORKTEST.EXE -> forktest.new text=5632 data=1536 bss=16002 stack=4096 entry=2
++ dcmp forktest.new /bin/forktest
+IDENTICAL (7184 bytes)
++ rm FORKTEST.O FORKTEST.EXE forktest.new
++ c88 GREP -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0268H code   0436H data        6% Utilization    + dbind ../rt/CRT0.O GREP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OGREP
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a GREP.EXE grep.new 1000
+d2a: GREP.EXE -> grep.new text=6144 data=1024 bss=17361 stack=4096 entry=2
++ dcmp grep.new /bin/grep
+IDENTICAL (7184 bytes)
++ rm GREP.O GREP.EXE grep.new
++ c88 ID -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0033H code   001FH data        4% Utilization    + dbind ../rt/CRT0.O ID ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OID
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a ID.EXE id.new 1000
+d2a: ID.EXE -> id.new text=5632 data=1024 bss=16314 stack=4096 entry=2
++ dcmp id.new /bin/id
+IDENTICAL (6672 bytes)
++ rm ID.O ID.EXE id.new
++ c88 KILL -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0059H code   0014H data        4% Utilization    + dbind ../rt/CRT0.O KILL ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OKILL
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a KILL.EXE kill.new 1000
+d2a: KILL.EXE -> kill.new text=5632 data=1024 bss=16303 stack=4096 entry=2
++ dcmp kill.new /bin/kill
+IDENTICAL (6672 bytes)
++ rm KILL.O KILL.EXE kill.new
++ c88 LN -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00DFH code   005FH data        5% Utilization    + dbind ../rt/CRT0.O LN ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OLN
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a LN.EXE ln.new 1000
+d2a: LN.EXE -> ln.new text=5632 data=1024 bss=16378 stack=4096 entry=2
++ dcmp ln.new /bin/ln
+IDENTICAL (6672 bytes)
++ rm LN.O LN.EXE ln.new
++ c88 LOGIN -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0088H code   0049H data        6% Utilization    + dbind ../rt/CRT0.O LOGIN ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OLOGIN
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a LOGIN.EXE login.new 1000
+d2a: LOGIN.EXE -> login.new text=5632 data=1024 bss=16356 stack=4096 entry=2
++ dcmp login.new /bin/login
+IDENTICAL (6672 bytes)
++ rm LOGIN.O LOGIN.EXE login.new
++ c88 LS -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     04F0H code   00CDH data        10% Utilization    + dbind ../rt/CRT0.O LS ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OLS
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a LS.EXE ls.new 1000
+d2a: LS.EXE -> ls.new text=6656 data=1536 bss=15976 stack=4096 entry=2
++ dcmp ls.new /bin/ls
+IDENTICAL (8208 bytes)
++ rm LS.O LS.EXE ls.new
++ c88 MKDIR -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0070H code   0012H data        4% Utilization    + dbind ../rt/CRT0.O MKDIR ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMKDIR
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a MKDIR.EXE mkdir.new 1000
+d2a: MKDIR.EXE -> mkdir.new text=5632 data=1024 bss=16301 stack=4096 entry=2
++ dcmp mkdir.new /bin/mkdir
+IDENTICAL (6672 bytes)
++ rm MKDIR.O MKDIR.EXE mkdir.new
++ c88 MKFS -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0C9EH code   0616H data        20% Utilization    + dbind ../rt/CRT0.O MKFS ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMKFS
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a MKFS.EXE mkfs.new 1000
+d2a: MKFS.EXE -> mkfs.new text=8704 data=1536 bss=17329 stack=4096 entry=2
++ dcmp mkfs.new /bin/mkfs
+IDENTICAL (10256 bytes)
++ rm MKFS.O MKFS.EXE mkfs.new
++ c88 MKNOD -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00F0H code   0034H data        5% Utilization    + dbind ../rt/CRT0.O MKNOD ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMKNOD
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a MKNOD.EXE mknod.new 1000
+d2a: MKNOD.EXE -> mknod.new text=5632 data=1024 bss=16335 stack=4096 entry=2
++ dcmp mknod.new /bin/mknod
+IDENTICAL (6672 bytes)
++ rm MKNOD.O MKNOD.EXE mknod.new
++ c88 MORE -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     01F6H code   00ABH data        8% Utilization    + dbind ../rt/CRT0.O MORE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMORE
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a MORE.EXE more.new 1000
+d2a: MORE.EXE -> more.new text=6144 data=1024 bss=16454 stack=4096 entry=2
++ dcmp more.new /bin/more
+IDENTICAL (7184 bytes)
++ rm MORE.O MORE.EXE more.new
++ c88 MOUNT -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     01DDH code   042FH data        11% Utilization    + dbind ../rt/CRT0.O MOUNT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OMOUNT
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a MOUNT.EXE mount.new 1000
+d2a: MOUNT.EXE -> mount.new text=6144 data=1024 bss=17354 stack=4096 entry=2
++ dcmp mount.new /bin/mount
+IDENTICAL (7184 bytes)
++ rm MOUNT.O MOUNT.EXE mount.new
++ c88 NICE -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0112H code   280EH data        6% Utilization    + dbind ../rt/CRT0.O NICE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ONICE
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a NICE.EXE nice.new 1000
+d2a: NICE.EXE -> nice.new text=5632 data=1024 bss=26537 stack=4096 entry=2
++ dcmp nice.new /bin/nice
+IDENTICAL (6672 bytes)
++ rm NICE.O NICE.EXE nice.new
++ c88 PS -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0240H code   0287H data        8% Utilization    + dbind ../rt/CRT0.O PS ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OPS
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a PS.EXE ps.new 1000
+d2a: PS.EXE -> ps.new text=6144 data=1024 bss=16930 stack=4096 entry=2
++ dcmp ps.new /bin/ps
+IDENTICAL (7184 bytes)
++ rm PS.O PS.EXE ps.new
++ c88 PWD -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0203H code   0245H data        8% Utilization    + dbind ../rt/CRT0.O PWD ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OPWD
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a PWD.EXE pwd.new 1000
+d2a: PWD.EXE -> pwd.new text=6144 data=1024 bss=16864 stack=4096 entry=2
++ dcmp pwd.new /bin/pwd
+IDENTICAL (7184 bytes)
++ rm PWD.O PWD.EXE pwd.new
++ c88 RM -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0061H code   002DH data        4% Utilization    + dbind ../rt/CRT0.O RM ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ORM
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a RM.EXE rm.new 1000
+d2a: RM.EXE -> rm.new text=5632 data=1024 bss=16328 stack=4096 entry=2
++ dcmp rm.new /bin/rm
+IDENTICAL (6672 bytes)
++ rm RM.O RM.EXE rm.new
++ c88 SH -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0B1FH code   0165H data        16% Utilization    + dbind ../rt/CRT0.O SH ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSH
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a SH.EXE sh.new 1000
+d2a: SH.EXE -> sh.new text=8192 data=1536 bss=16128 stack=4096 entry=2
++ dcmp sh.new /bin/sh
+IDENTICAL (9744 bytes)
++ rm SH.O SH.EXE sh.new
++ c88 SIGTEST -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     00DBH code   00F1H data        7% Utilization    + dbind ../rt/CRT0.O SIGTEST ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSIGTEST
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a SIGTEST.EXE sigtest.new 1000
+d2a: SIGTEST.EXE -> sigtest.new text=5632 data=1536 bss=16012 stack=4096 entry=2
++ dcmp sigtest.new /bin/sigtest
+IDENTICAL (7184 bytes)
++ rm SIGTEST.O SIGTEST.EXE sigtest.new
++ c88 SLEEP -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0071H code   001AH data        4% Utilization    + dbind ../rt/CRT0.O SLEEP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSLEEP
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a SLEEP.EXE sleep.new 1000
+d2a: SLEEP.EXE -> sleep.new text=5632 data=1024 bss=16309 stack=4096 entry=2
++ dcmp sleep.new /bin/sleep
+IDENTICAL (6672 bytes)
++ rm SLEEP.O SLEEP.EXE sleep.new
++ c88 STTY -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     036FH code   035AH data        24% Utilization    + dbind ../rt/CRT0.O STTY ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSTTY
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a STTY.EXE stty.new 1000
+d2a: STTY.EXE -> stty.new text=6144 data=2048 bss=16117 stack=4096 entry=2
++ dcmp stty.new /bin/stty
+IDENTICAL (8208 bytes)
++ rm STTY.O STTY.EXE stty.new
++ c88 SYNC -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0008H code   0000H data        4% Utilization    + dbind ../rt/CRT0.O SYNC ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OSYNC
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a SYNC.EXE sync.new 1000
+d2a: SYNC.EXE -> sync.new text=5632 data=1024 bss=16283 stack=4096 entry=2
++ dcmp sync.new /bin/sync
+IDENTICAL (6672 bytes)
++ rm SYNC.O SYNC.EXE sync.new
++ c88 UMOUNT -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     017AH code   043DH data        8% Utilization    + dbind ../rt/CRT0.O UMOUNT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OUMOUNT
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a UMOUNT.EXE umount.new 1000
+d2a: UMOUNT.EXE -> umount.new text=5632 data=1024 bss=17368 stack=4096 entry=2
++ dcmp umount.new /bin/umount
+IDENTICAL (6672 bytes)
++ rm UMOUNT.O UMOUNT.EXE umount.new
++ c88 WC -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     013AH code   0238H data        6% Utilization    + dbind ../rt/CRT0.O WC ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OWC
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a WC.EXE wc.new 1000
+d2a: WC.EXE -> wc.new text=5632 data=1024 bss=16851 stack=4096 entry=2
++ dcmp wc.new /bin/wc
+IDENTICAL (6672 bytes)
++ rm WC.O WC.EXE wc.new
++ c88 DCMP -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0173H code   04B3H data        8% Utilization    + dbind ../rt/CRT0.O DCMP ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ODCMP
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a DCMP.EXE dcmp.new 1000
+d2a: DCMP.EXE -> dcmp.new text=5632 data=1024 bss=17486 stack=4096 entry=2
++ dcmp dcmp.new /bin/dcmp
+IDENTICAL (6672 bytes)
++ rm DCMP.O DCMP.EXE dcmp.new
++ c88 DRUN -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     04E4H code   412AH data        13% Utilization    + dbind ../rt/CRT0.O DRUN ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -ODRUN
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a DRUN.EXE drun.new 1000
+d2a: DRUN.EXE -> drun.new text=6656 data=1536 bss=32453 stack=4096 entry=2
++ dcmp drun.new /bin/drun
+IDENTICAL (8208 bytes)
++ rm DRUN.O DRUN.EXE drun.new
++ c88 REBOOT -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0084H code   0050H data        5% Utilization    + dbind ../rt/CRT0.O REBOOT ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OREBOOT
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a REBOOT.EXE reboot.new 1000
+d2a: REBOOT.EXE -> reboot.new text=5632 data=1024 bss=16363 stack=4096 entry=2
++ dcmp reboot.new /bin/reboot
+IDENTICAL (6672 bytes)
++ rm REBOOT.O REBOOT.EXE reboot.new
++ c88 FDTEST -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     03C3H code   0558H data        16% Utilization    + dbind ../rt/CRT0.O FDTEST ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OFDTEST
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a FDTEST.EXE fdtest.new 1000
+d2a: FDTEST.EXE -> fdtest.new text=6656 data=1536 bss=17139 stack=4096 entry=2
++ dcmp fdtest.new /bin/fdtest
+IDENTICAL (8208 bytes)
++ rm FDTEST.O FDTEST.EXE fdtest.new
++ c88 HELLO -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0060H code   0054H data        5% Utilization    + dbind ../rt/CRT0.O HELLO ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OHELLO
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a HELLO.EXE hello.new 1000
+d2a: HELLO.EXE -> hello.new text=5632 data=1024 bss=16367 stack=4096 entry=2
++ dcmp hello.new /bin/hello
+IDENTICAL (6672 bytes)
++ rm HELLO.O HELLO.EXE hello.new
++ c88 ZOMBIE -i../rt/
+C88 Compiler    V3.03    (c) Mark DeSmet, 1982-87
+End of C88     0019H code   0000H data        4% Utilization    + dbind ../rt/CRT0.O ZOMBIE ../rt/SYSCALL.O ../rt/ULIB.O ../rt/PRINTF.O ../rt/CTIME.O ../rt/SETEXIT.O ../rt/UCOMPAT.O -A -L../rt/ -OZOMBIE
+Binder for C88 and ASM88     V2.0    (c) Mark DeSmet, 1982-87
+end of BIND        36% utilization    + d2a ZOMBIE.EXE zombie.new 1000
+d2a: ZOMBIE.EXE -> zombie.new text=5632 data=1024 bss=16283 stack=4096 entry=2
++ dcmp zombie.new /bin/zombie
+IDENTICAL (6672 bytes)
++ rm ZOMBIE.O ZOMBIE.EXE zombie.new
++ echo === MKUSR FIXPOINT OK ===
+=== MKUSR FIXPOINT OK ===
+=== DRUN DONE ===
+# 

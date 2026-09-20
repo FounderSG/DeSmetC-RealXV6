@@ -1,18 +1,25 @@
-: proto -- the RealXV6 filesystem, in mkfs format: what is on the disk,
-: and where each file comes from.
+: proto -- the RealXV6 filesystem this image carries on rk0, in mkfs format:
+: what is on the disk, and where each file comes from.  An image hands
+: someone a set of programs, and which programs those are is a decision, so
+: this list is written rather than arrived at: a name here is a file that
+: ships, a name absent is a file withheld.
 :
-: /bin is not carried here, it is built.  CROSS puts the toolchain in
-: C:\XCC, MKBIN compiles every program below with it into C:\XV6\BIN, and
-: the $BIN token is how mkfs finds them -- see the legend at the foot.  So
-: no line below names a binary; each names a program and its source is in
-: the tree beside it.
+: /bin is not carried here, it is built.  Every program is named through
+: $BIN, the directory MKBIN fills -- see the legend at the foot -- so what
+: ships for a name here is that program's SOURCE and the reader compiles
+: the a.out.  MKBIN's list and this one name exactly the same programs.
 :
-: /dev is what the kernel this image runs on has: rk, and raw rk for the
-: programs that build a filesystem from inside the system.
+: /dev and /bin describe the kernel this image actually runs on, the one on
+: the boot floppy beside it: it has a floppy driver, so fd0 and fd1 are here
+: and fdtest with them, and reboot(2) is slot 49 of its sysent, so /bin has
+: reboot.
 :
-: Block 0 stays zero -- the '-' below.  Nothing boots this pack: the system
-: comes up off the floppy, and a boot sector laid where nothing reads it
-: would only suggest otherwise.
+: No binary is named below at all: a /bin line names what MKBIN compiles
+: from the source beside it.  A program whose source is not in this tree
+: therefore cannot appear here -- nothing would be able to build it.
+:
+: Block 0 stays zero -- the '-' below.  The floppy is what boots; a boot
+: sector written where nothing reads it would only suggest otherwise.
 :
 -
 4000 100 872
@@ -57,6 +64,10 @@ bin     d--755 0 0
         dlib88      ---755 0 0 $BIN/DLIB88.AO
         drun        ---755 0 0 $BIN/DRUN.AO
         d2a         ---755 0 0 $BIN/D2A.AO
+        e2c         ---755 0 0 $BIN/E2C.AO
+        mkboot      ---755 0 0 $BIN/MKBOOT.AO
+        reboot      ---755 0 0 $BIN/REBOOT.AO
+        fdtest      ---755 0 0 $BIN/FDTEST.AO
         hello       ---755 0 0 $BIN/HELLO.AO
         zombie      ---755 0 0 $BIN/ZOMBIE.AO
         $
@@ -70,132 +81,33 @@ dev     d--755 0 0
         rrk1    c--644 0 0 2 1
         rrk2    c--644 0 0 2 2
         rrk3    c--644 0 0 2 3
+        fd0     b--644 0 0 1 0
+        fd1     b--644 0 0 1 1
         mem     c--644 0 0 1 0
         kmem    c--644 0 0 1 1
         null    c--644 0 0 1 2
         $
 etc     d--755 0 0
 $
+: /test -- two goldens, and nothing else.  Both are read by the on-target
+: build scripts themselves: mkkern ends by dcmp'ing the kernel it just
+: built against REFK.COM, and mkimg checks its floppy layout against
+: REFF.IMG.  Withhold them and the two scripts this stage exists for stop
+: at their last step.  Neither is carried: $KBIN is what MKKBIN builds on
+: the reader's DOS, the way $BIN is what MKBIN builds.
+test    d--755 0 0
+        REFK.COM    ---644 0 0 $KBIN/REFK.COM
+        REFF.IMG    ---644 0 0 $KBIN/REFF.IMG
+        $
 tmp     d--777 0 0
 $
 usr     d--755 0 0
         source  d--755 0 0
         $
 $
-: /src -- ALL source that can be rebuilt on the target, in three directories:
-:
-:   rt/      the V6 runtime, built ONCE and shared (mkrt).  desmet/ and usr/
-:            link it as ../rt/NAME, with -L../rt/ for CSTDIO.S.
-:   desmet/  the DeSmet toolchain itself, and d2a, which is how every
-:            program on this disk was made (mkall)
-:   usr/     the DeSmet-built user programs (mkusr)
-:
-: The bulky sources are read through the $BUILD / $RT tokens, from the same
-: files the DOS build compiles, so there is only ever one copy of each.
-:
-: C88's include search is dead here (V6MISC's _MSDOS2_ is 0, so findfile()
-: never runs and C88 just open()s the name it was handed, which DCOMPAT
-: resolves case-blind), so anything outside the cwd is reached by spelling
-: the path: C88's -i prefix for headers (options come AFTER the file name),
-: a path'd source name for a compile, and BIND's -L / an explicit .O for a
-: link.  Case is what fixes the spelling of a directory:
-:   - rt/ is lower-case and needs no fold at all: every source spells it
-:     "UNIX.H" in UPPER, so ../rt/UNIX.H hits VERBATIM and the fold never
-:     runs -- it could not help there, since foldcase() rewrites the whole
-:     path and would turn ../rt/ into ../RT/.
+: /src is the MOUNT POINT for rk1, which carries the on-target source
+: tree (see proto.rk1).  It must stay an empty directory here.
 src     d--777 0 0
-        rt      d--777 0 0
-                UNIX.H      ---644 0 0 $RT/UNIX.H
-                CRT0.A      ---644 0 0 $RT/CRT0.A
-                DCRT0.A     ---644 0 0 $RT/DCRT0.A
-                V6MISC.A    ---644 0 0 $RT/V6MISC.A
-                SETEXIT.A   ---644 0 0 $RT/SETEXIT.A
-                SYSCALL.C   ---644 0 0 $RT/SYSCALL.C
-                USTR.C      ---644 0 0 $RT/USTR.C
-                PRINTF.C    ---644 0 0 $RT/PRINTF.C
-                DCOMPAT.C   ---644 0 0 $RT/DCOMPAT.C
-                V6DOS.C     ---644 0 0 $RT/V6DOS.C
-                V6CHAIN.C   ---644 0 0 $RT/V6CHAIN.C
-                ULIB.C      ---644 0 0 $RT/ULIB.C
-                UCOMPAT.C   ---644 0 0 $RT/UCOMPAT.C
-                CTIME.C     ---644 0 0 $RT/CTIME.C
-                CSTDIO.S    ---644 0 0 ../../drive_c/DESMET/LIB/CSTDIO.S
-                mkrt        ---644 0 0 ../usr/dsrc/MKRT
-                $
-        desmet  d--777 0 0
-                mkall       ---644 0 0 ../usr/dsrc/MKALL
-                GENL        ---644 0 0 ../usr/dsrc/GENL
-                C88L        ---644 0 0 ../usr/dsrc/C88L
-                ASML        ---644 0 0 ../usr/dsrc/ASML
-                BINDL       ---644 0 0 ../usr/dsrc/BINDL
-                LIBL        ---644 0 0 ../usr/dsrc/LIBL
-                D2AL        ---644 0 0 ../usr/dsrc/D2AL
-                OBJ.H       ---644 0 0 $BUILD/C88/OBJ.H
-                NODES.H     ---644 0 0 $BUILD/C88/NODES.H
-                PASS1.H     ---644 0 0 $BUILD/C88/PASS1.H
-                PASS2.H     ---644 0 0 $BUILD/GEN/PASS2.H
-                INST86.H    ---644 0 0 $BUILD/GEN/INST86.H
-                ASM88.H     ---644 0 0 $BUILD/ASM/ASM88.H
-                GEN.C       ---644 0 0 $BUILD/GEN/GEN.C
-                GEN2.C      ---644 0 0 $BUILD/GEN/GEN2.C
-                GEN3.C      ---644 0 0 $BUILD/GEN/GEN3.C
-                GEN4.C      ---644 0 0 $BUILD/GEN/GEN4.C
-                GEN5.C      ---644 0 0 $BUILD/GEN/GEN5.C
-                GEN6.C      ---644 0 0 $BUILD/GEN/GEN6.C
-                C88.C       ---644 0 0 $BUILD/C88/C88.C
-                C2.C        ---644 0 0 $BUILD/C88/C2.C
-                C3.C        ---644 0 0 $BUILD/C88/C3.C
-                C4.C        ---644 0 0 $BUILD/C88/C4.C
-                C5.C        ---644 0 0 $BUILD/C88/C5.C
-                C6.C        ---644 0 0 $BUILD/C88/C6.C
-                C7.C        ---644 0 0 $BUILD/C88/C7.C
-                ASM88.C     ---644 0 0 $BUILD/ASM/ASM88.C
-                ASM2.C      ---644 0 0 $BUILD/ASM/ASM2.C
-                ASM3.C      ---644 0 0 $BUILD/ASM/ASM3.C
-                ASM4.C      ---644 0 0 $BUILD/ASM/ASM4.C
-                ASM5.C      ---644 0 0 $BUILD/ASM/ASM5.C
-                BIND.C      ---644 0 0 $BUILD/BIND/BIND.C
-                LIB88.C     ---644 0 0 $BUILD/LIB88/LIB88.C
-                D2A.C       ---644 0 0 $RT/D2A.C
-                $
-        usr     d--777 0 0
-                mkusr       ---644 0 0 ../usr/dsrc/MKUSR
-                INIT.C      ---644 0 0 ../../drive_c/XV6/USR/INIT.C
-                CAT.C       ---644 0 0 ../../drive_c/XV6/USR/CAT.C
-                CHMOD.C     ---644 0 0 ../../drive_c/XV6/USR/CHMOD.C
-                CP.C        ---644 0 0 ../../drive_c/XV6/USR/CP.C
-                DATE.C      ---644 0 0 ../../drive_c/XV6/USR/DATE.C
-                ECHO.C      ---644 0 0 ../../drive_c/XV6/USR/ECHO.C
-                ED.C        ---644 0 0 ../../drive_c/XV6/USR/ED.C
-                FIB.C       ---644 0 0 ../../drive_c/XV6/USR/FIB.C
-                FORKTEST.C  ---644 0 0 ../../drive_c/XV6/USR/FORKTEST.C
-                GREP.C      ---644 0 0 ../../drive_c/XV6/USR/GREP.C
-                ID.C        ---644 0 0 ../../drive_c/XV6/USR/ID.C
-                KILL.C      ---644 0 0 ../../drive_c/XV6/USR/KILL.C
-                LN.C        ---644 0 0 ../../drive_c/XV6/USR/LN.C
-                LOGIN.C     ---644 0 0 ../../drive_c/XV6/USR/LOGIN.C
-                LS.C        ---644 0 0 ../../drive_c/XV6/USR/LS.C
-                MKDIR.C     ---644 0 0 ../../drive_c/XV6/USR/MKDIR.C
-                MKFS.C      ---644 0 0 ../../drive_c/XV6/USR/MKFS.C
-                MKNOD.C     ---644 0 0 ../../drive_c/XV6/USR/MKNOD.C
-                MORE.C      ---644 0 0 ../../drive_c/XV6/USR/MORE.C
-                MOUNT.C     ---644 0 0 ../../drive_c/XV6/USR/MOUNT.C
-                NICE.C      ---644 0 0 ../../drive_c/XV6/USR/NICE.C
-                PS.C        ---644 0 0 ../../drive_c/XV6/USR/PS.C
-                PWD.C       ---644 0 0 ../../drive_c/XV6/USR/PWD.C
-                RM.C        ---644 0 0 ../../drive_c/XV6/USR/RM.C
-                SH.C        ---644 0 0 ../../drive_c/XV6/USR/SH.C
-                SIGTEST.C   ---644 0 0 ../../drive_c/XV6/USR/SIGTEST.C
-                SLEEP.C     ---644 0 0 ../../drive_c/XV6/USR/SLEEP.C
-                STTY.C      ---644 0 0 ../../drive_c/XV6/USR/STTY.C
-                SYNC.C      ---644 0 0 ../../drive_c/XV6/USR/SYNC.C
-                UMOUNT.C    ---644 0 0 ../../drive_c/XV6/USR/UMOUNT.C
-                WC.C        ---644 0 0 ../../drive_c/XV6/USR/WC.C
-                DCMP.C      ---644 0 0 $RT/DCMP.C
-                DRUN.C      ---644 0 0 $RT/DRUN.C
-                HELLO.C     ---644 0 0 ../../drive_c/XCC/HELLO.C
-                ZOMBIE.C    ---644 0 0 ../../drive_c/XV6/USR/ZOMBIE.C
-                $
         $
 $
 
@@ -223,5 +135,8 @@ $
 : token the caller defines on the mkfs command line (-D NAME=PATH):
 :   $BUILD   drive_c/BUILD        -- compiler component sources
 :   $RT      drive_c/XV6/RT       -- V6 runtime sources
+:   $KERNEL  drive_c/XV6/KERNEL   -- RealXV6 kernel sources (KEN/ DMR/ H/)
 :   $BIN     drive_c/XV6/BIN      -- the a.out MKBIN builds, one per /bin
 :                                 program (run CROSS, then MKBIN, first)
+:   $KBIN    drive_c/XV6/KBIN     -- the kernel, the boot sector and the
+:                                 layout golden MKKBIN builds (after MKBIN)
